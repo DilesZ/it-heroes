@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useUi } from "../state/uiStore";
 import { useHud } from "../state/hudStore";
+import SkillBar from "./SkillBar";
 import { CLASSES, GAME_NAME, VERSION, PLAYER_BASE } from "@it-heroes/shared";
 
 function Bar({
@@ -38,6 +39,7 @@ export default function Hud() {
 
   return (
     <div className="pointer-events-none absolute inset-0">
+      <SkillBar />
       <div className="absolute bottom-4 left-4 flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <span className="w-10 text-right font-display text-[10px] font-bold tracking-widest text-rose-300">HP</span>

@@ -1,6 +1,7 @@
 const keys = new Set<string>();
 const pressed = new Set<string>();
 const mouseNdc = { x: 0, y: 0 };
+const mbuttons = new Set<number>();
 
 const GAME_KEYS = new Set([
   "KeyW",
@@ -46,12 +47,19 @@ export function initInput(dom: HTMLElement) {
     mouseNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
   };
   const onContextMenu = (e: Event) => e.preventDefault();
+  const onMouseDown = (e: MouseEvent) => {
+    mbuttons.add(e.button);
+    if (e.button !== 0) e.preventDefault();
+  };
+  const onMouseUp = (e: MouseEvent) => mbuttons.delete(e.button);
 
   window.addEventListener("keydown", onDown);
   window.addEventListener("keyup", onUp);
   window.addEventListener("blur", onBlur);
   dom.addEventListener("mousemove", onMouseMove);
   dom.addEventListener("contextmenu", onContextMenu);
+  dom.addEventListener("mousedown", onMouseDown);
+  window.addEventListener("mouseup", onMouseUp);
 
   cleanup = () => {
     window.removeEventListener("keydown", onDown);
@@ -59,6 +67,8 @@ export function initInput(dom: HTMLElement) {
     window.removeEventListener("blur", onBlur);
     dom.removeEventListener("mousemove", onMouseMove);
     dom.removeEventListener("contextmenu", onContextMenu);
+    dom.removeEventListener("mousedown", onMouseDown);
+    window.removeEventListener("mouseup", onMouseUp);
     cleanup = null;
   };
   return cleanup;
@@ -66,6 +76,7 @@ export function initInput(dom: HTMLElement) {
 
 export const input = {
   isDown: (code: string) => keys.has(code),
+  isMouseDown: (button: number) => mbuttons.has(button),
   consumePress: (code: string) => {
     const had = pressed.has(code);
     pressed.delete(code);

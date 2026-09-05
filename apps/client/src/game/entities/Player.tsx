@@ -40,9 +40,8 @@ export default function Player() {
   );
 
   useFrame((_, rawDt) => {
-    const dt = Math.min(rawDt, 0.05);
+    const dt = Math.min(rawDt, 0.05) * world.timeScale;
     const p = world.player;
-    world.time += dt;
 
     camera.getWorldDirection(camFwd);
     camFwd.y = 0;

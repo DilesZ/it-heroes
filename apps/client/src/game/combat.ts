@@ -1,0 +1,151 @@
+import * as THREE from "three";
+import { world, type Combatant } from "./state/world";
+
+export function spawnParticles(
+  pos: THREE.Vector3,
+  colorHex: string,
+  count = 12,
+  speed = 6,
+  size = 1
+) {
+  let spawned = 0;
+  for (const p of world.particles) {
+    if (p.alive) continue;
+    const a = Math.random() * Math.PI * 2;
+    const el = Math.random() * Math.PI * 0.5;
+    const s = speed * (0.4 + Math.random() * 0.8);
+    p.pos.copy(pos);
+    p.vel.set(Math.cos(a) * Math.cos(el) * s, Math.sin(el) * s + 1.5, Math.sin(a) * Math.cos(el) * s);
+    p.maxLife = 0.35 + Math.random() * 0.35;
+    p.life = p.maxLife;
+    p.size = size * (0.5 + Math.random() * 0.7);
+    p.color.set(colorHex);
+    p.alive = true;
+    if (++spawned >= count) break;
+  }
+}
+
+export function spawnFloat(pos: THREE.Vector3, text: string, color: string, big = false) {
+  for (const f of world.floats) {
+    if (f.alive) continue;
+    f.pos.copy(pos);
+    f.pos.x += (Math.random() - 0.5) * 0.5;
+    f.pos.y += 1.2 + Math.random() * 0.4;
+    f.text = text;
+    f.color = color;
+    f.t = 0;
+    f.dur = big ? 1.1 : 0.8;
+    f.big = big;
+    f.alive = true;
+    return;
+  }
+}
+
+export function spawnProjectile(opts: {
+  pos: THREE.Vector3;
+  dir: THREE.Vector3;
+  speed: number;
+  damage: number;
+  color: string;
+  life?: number;
+}) {
+  for (const pr of world.projectiles) {
+    if (pr.alive) continue;
+    pr.alive = true;
+    pr.pos.copy(opts.pos);
+    pr.dir.copy(opts.dir).normalize();
+    pr.speed = opts.speed;
+    pr.damage = opts.damage;
+    pr.color = opts.color;
+    pr.life = opts.life ?? 2;
+    pr.pierce = 0;
+    return;
+  }
+}
+
+export function spawnSlash(pos: THREE.Vector3, facing: number, color: string, radius: number) {
+  for (const s of world.slashes) {
+    if (s.t > 0) continue;
+    s.pos.copy(pos);
+    s.facing = facing;
+    s.t = 1;
+    s.color = color;
+    s.radius = radius;
+    return;
+  }
+}
+
+export function spawnBlast(pos: THREE.Vector3, color: string, radius: number) {
+  for (const b of world.blasts) {
+    if (b.t > 0) continue;
+    b.pos.copy(pos);
+    b.t = 1;
+    b.color = color;
+    b.radius = radius;
+    return;
+  }
+}
+
+export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean; color?: string; from?: THREE.Vector3; knock?: number }) {
+  if (c.dead) return;
+  const crit = opts?.crit ?? false;
+  const dmg = Math.max(1, Math.round(amount));
+  c.hp -= dmg;
+  c.hitFlash = 0.18;
+  spawnFloat(c.pos, crit ? `${dmg}!` : `${dmg}`, crit ? "#fbbf24" : opts?.color ?? "#ffffff", crit);
+  spawnParticles(c.pos, opts?.color ?? c.emissive, crit ? 16 : 8, crit ? 8 : 5);
+  if (opts?.from && opts.knock) {
+    const k = tmpV.copy(c.pos).sub(opts.from).setY(0).normalize().multiplyScalar(opts.knock);
+    c.vel.add(k);
+  }
+  if (crit) {
+    world.hitstopT = Math.max(world.hitstopT, 0.07);
+    world.shake = Math.max(world.shake, 0.35);
+  } else {
+    world.shake = Math.max(world.shake, 0.12);
+  }
+  if (c.hp <= 0) {
+    c.dead = true;
+    c.deadT = 0;
+    c.respawnT = c.kind === "dummy" ? 3 : -1;
+    spawnParticles(c.pos, c.emissive, 26, 9, 1.4);
+    spawnFloat(c.pos, "K.I.A.", "#f43f5e", true);
+    world.shake = Math.max(world.shake, 0.45);
+  }
+}
+
+export function aliveCombatants(): Combatant[] {
+  return world.combatants.filter((c) => !c.dead);
+}
+
+export function ensureDummies() {
+  const existing = world.combatants.filter((c) => c.kind === "dummy");
+  if (existing.length > 0) return;  const spots: [number, number][] = [
+    [5, 5],
+    [-5, 5],
+    [8, 11],
+  ];
+  for (const [x, z] of spots) {
+    world.combatants.push({
+      id: world.nextId++,
+      kind: "dummy",
+      defId: null,
+      pos: new THREE.Vector3(x, 0, z),
+      vel: new THREE.Vector3(),
+      hp: 120,
+      maxHp: 120,
+      dead: false,
+      deadT: 0,
+      respawnT: 0,
+      hitFlash: 0,
+      scale: 1,
+      color: "#1e293b",
+      emissive: "#f97316",
+      bobPhase: Math.random() * Math.PI * 2,
+      attackT: 0,
+    });
+  }
+  world.dummyVersion++;
+}
+
+const tmpV = new THREE.Vector3();
