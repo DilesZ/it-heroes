@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { ENEMIES, type EnemyDef } from "@it-heroes/shared";
-import { world, type Combatant } from "../state/world";
+import { world, insideWorld, zoneOf, type Combatant } from "../state/world";
 import { isPaused } from "../../state/progressionStore";
 import {
   damagePlayer,
@@ -23,9 +23,28 @@ export function defOf(c: Combatant): EnemyDef | null {
   return c.defId ? DEF_BY_ID[c.defId] ?? null : null;
 }
 
-const ROTATION: string[] = ["bug", "bug", "trojan", "spyware", "trojan", "bug", "spyware"];
-let rotIndex = 0;
-let elapsed = 0;
+const ZONE_POOLS: Record<string, string[]> = {
+  hub: ["bug", "bug", "trojan", "spyware", "trojan", "bug", "spyware"],
+  corridorA: ["bug", "trojan", "worm"],
+  cables: ["worm", "worm", "rootkit", "botnet", "botnet", "rootkit", "worm"],
+  corridorB: ["rootkit", "botnet", "firewall"],
+  cloud: ["firewall", "firewall", "rootkit", "botnet", "spyware", "firewall"],
+};
+
+const BOSS_ARENAS: { defId: string; x: number; z: number }[] = [
+  { defId: "bsod_lord", x: 0, z: -22 },
+  { defId: "worm_queen", x: 0, z: -105 },
+  { defId: "mainframe", x: 0, z: -195 },
+];
+
+export function spawnBosses() {
+  for (const a of BOSS_ARENAS) {
+    const existing = world.combatants.find((c) => c.defId === a.defId);
+    if (existing) continue;
+    const c = spawnEnemy(a.defId, a.x, a.z, 1, 1);
+    c.respawnT = 45;
+  }
+}
 
 export function spawnEnemy(defId: string, x: number, z: number, hpMult = 1, dmgMult = 1): Combatant {
   const def = DEF_BY_ID[defId];
@@ -50,6 +69,7 @@ export function spawnEnemy(defId: string, x: number, z: number, hpMult = 1, dmgM
     aiT: Math.random() * 0.5,
     skillT: 3,
     summonT: 8,
+    volleyT: 3,
     home: new THREE.Vector3(x, 0, z),
   };
   c.vel.set(0, 0, 0);
@@ -60,11 +80,17 @@ export function spawnEnemy(defId: string, x: number, z: number, hpMult = 1, dmgM
 }
 
 export function spawnBoss() {
-  const existing = world.combatants.find((c) => c.defId === "bsod_lord");
-  if (existing) return existing;
-  const c = spawnEnemy("bsod_lord", 0, -22, 1, 1);
-  c.respawnT = 45;
-  return c;
+  spawnBosses();
+  return world.combatants.find((c) => c.defId === "bsod_lord");
+}
+
+let rotIndex = 0;
+let elapsed = 0;
+
+export function resetSpawning() {
+  rotIndex = 0;
+  elapsed = 0;
+  spawnTick = 0;
 }
 
 export default function EnemySystem() {
@@ -82,15 +108,25 @@ export default function EnemySystem() {
       spawnTick++;
       if (spawnTick > 90) {
         spawnTick = 0;
-        const defId = ROTATION[rotIndex++ % ROTATION.length];
-        const a = Math.random() * Math.PI * 2;
-        const r = 26 + Math.random() * 6;
-        const mult = 1 + elapsed / 300;
-        spawnEnemy(defId, Math.cos(a) * r, Math.sin(a) * r, mult, mult);
+        const ppos = world.player.pos;
+        const zone = zoneOf(ppos.x, ppos.z) ?? "hub";
+        const pool = ZONE_POOLS[zone] ?? ZONE_POOLS.hub;
+        const defId = pool[rotIndex++ % pool.length];
+        const mult = 1 + elapsed / 300 + (zone === "cloud" ? 0.5 : zone === "cables" ? 0.25 : 0);
+        for (let tries = 0; tries < 8; tries++) {
+          const a = Math.random() * Math.PI * 2;
+          const r = 16 + Math.random() * 8;
+          const sx = ppos.x + Math.cos(a) * r;
+          const sz = ppos.z + Math.sin(a) * r;
+          if (insideWorld(sx, sz, -1)) {
+            spawnEnemy(defId, sx, sz, mult, mult);
+            break;
+          }
+        }
       }
     }
 
-    if (elapsed > 20) spawnBoss();
+    if (elapsed > 20) spawnBosses();
 
     for (const c of enemies) {
       const def = DEF_BY_ID[c.defId!];
@@ -102,11 +138,9 @@ export default function EnemySystem() {
     separate(enemies, dt);
 
     for (const c of enemies) {
-      const d = Math.hypot(c.pos.x, c.pos.z);
-      if (d > world.hubBounds) {
-        const s = world.hubBounds / d;
-        c.pos.x *= s;
-        c.pos.z *= s;
+      if (!insideWorld(c.pos.x, c.pos.z)) {
+        c.pos.copy(c.home);
+        c.vel.set(0, 0, 0);
       }
     }
   });
@@ -199,8 +233,10 @@ function updateBoss(c: Combatant, def: EnemyDef, dt: number) {
   c.aiT -= dt;
   c.skillT -= dt;
   c.summonT -= dt;
+  c.volleyT -= dt;
   c.respawnT = 45;
 
+  const cfg = BOSS_CFG[c.defId!] ?? BOSS_CFG.bsod_lord;
   toPlayer.copy(p.pos).sub(c.pos).setY(0);
   const dist = toPlayer.length();
   const frac = c.hp / c.maxHp;
@@ -213,9 +249,10 @@ function updateBoss(c: Combatant, def: EnemyDef, dt: number) {
         c.aiState = "chase";
         c.skillT = 3;
         c.summonT = 6;
+        c.volleyT = 2.5;
         spawnBlast(c.pos, def.emissive, 6);
         spawnParticles(c.pos, def.emissive, 40, 10, 1.5);
-        spawnFloat(c.pos, "BSOD LORD", def.emissive, true);
+        spawnFloat(c.pos, bossTitle(c.defId!), def.emissive, true);
         world.shake = 1;
         world.hitstopT = Math.max(world.hitstopT, 0.12);
       }
@@ -238,15 +275,34 @@ function updateBoss(c: Combatant, def: EnemyDef, dt: number) {
         c.vel.set(0, 0, 0);
         spawnFloat(c.pos, "!!", "#fbbf24", true);
       }
-      if (phase >= 3 && c.summonT <= 0) {
-        c.summonT = 9;
-        const minions = world.combatants.filter((x) => x.kind === "enemy" && !x.dead && x.defId === "bug").length;
-        if (minions < 4) {
-          for (let i = 0; i < 2; i++) {
+      if (cfg.volley && phase >= 2 && c.volleyT <= 0 && dist < 20) {
+        c.volleyT = 3.2;
+        const baseA = Math.atan2(toPlayer.x, toPlayer.z);
+        for (const off of [-0.18, 0, 0.18]) {
+          spawnAt.copy(c.pos);
+          spawnAt.y = 2.2;
+          tmpDir.set(Math.sin(baseA + off), 0, Math.cos(baseA + off));
+          spawnProjectile({
+            pos: spawnAt,
+            dir: tmpDir,
+            speed: 12,
+            damage: def.damage * 0.7,
+            color: def.emissive,
+            life: 3,
+            fromPlayer: false,
+          });
+        }
+        spawnParticles(c.pos, def.emissive, 8, 4, 1);
+      }
+      if (phase >= (cfg.earlySummon ? 2 : 3) && c.summonT <= 0 && cfg.summonId) {
+        c.summonT = cfg.summonEvery;
+        const minions = world.combatants.filter((x) => x.kind === "enemy" && !x.dead && x.defId === cfg.summonId).length;
+        if (minions < cfg.summonCap) {
+          for (let i = 0; i < cfg.summonN; i++) {
             const a = Math.random() * Math.PI * 2;
-            spawnEnemy("bug", c.pos.x + Math.cos(a) * 3, c.pos.z + Math.sin(a) * 3, 1, 1);
+            spawnEnemy(cfg.summonId, c.pos.x + Math.cos(a) * 3, c.pos.z + Math.sin(a) * 3, 1, 1);
           }
-          spawnFloat(c.pos, "SPAWN BUGS", def.emissive);
+          spawnFloat(c.pos, "SPAWN", def.emissive);
         }
       }
       break;
@@ -262,13 +318,13 @@ function updateBoss(c: Combatant, def: EnemyDef, dt: number) {
       break;
     case "slamTel":
       if (c.aiT <= 0) {
-        spawnBlast(c.pos, def.emissive, 5.5);
+        spawnBlast(c.pos, def.emissive, cfg.slamR);
         spawnParticles(c.pos, def.emissive, 45, 12, 1.6);
         world.shake = 1;
         world.hitstopT = Math.max(world.hitstopT, 0.1);
         if (p.alive) {
           toPlayer.copy(p.pos).sub(c.pos).setY(0);
-          if (toPlayer.length() < 5.8) damagePlayer(def.damage * 1.4, c.pos);
+          if (toPlayer.length() < cfg.slamR + 0.3) damagePlayer(def.damage * cfg.slamMult, c.pos);
         }
         c.aiState = "cooldown";
         c.aiT = 0.8;
@@ -283,6 +339,21 @@ function updateBoss(c: Combatant, def: EnemyDef, dt: number) {
       c.aiState = "chase";
       break;
   }
+}
+
+const BOSS_CFG: Record<
+  string,
+  { slamR: number; slamMult: number; summonId: string; summonN: number; summonCap: number; summonEvery: number; earlySummon: boolean; volley: boolean }
+> = {
+  bsod_lord: { slamR: 5.5, slamMult: 1.4, summonId: "", summonN: 0, summonCap: 0, summonEvery: 99, earlySummon: false, volley: false },
+  worm_queen: { slamR: 4.5, slamMult: 1.5, summonId: "botnet", summonN: 3, summonCap: 5, summonEvery: 12, earlySummon: true, volley: false },
+  mainframe: { slamR: 6.5, slamMult: 1.6, summonId: "firewall", summonN: 1, summonCap: 2, summonEvery: 14, earlySummon: true, volley: true },
+};
+
+function bossTitle(defId: string): string {
+  if (defId === "worm_queen") return "WORM QUEEN";
+  if (defId === "mainframe") return "MAINFRAME";
+  return "BSOD LORD";
 }
 
 function spawnSlashAt(pos: THREE.Vector3, facing: number, color: string, radius: number) {

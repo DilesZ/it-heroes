@@ -1,6 +1,26 @@
 import * as THREE from "three";
 import { PLAYER_BASE } from "@it-heroes/shared";
 
+export type ZoneId = "hub" | "corridorA" | "cables" | "corridorB" | "cloud";
+
+export function zoneOf(x: number, z: number): ZoneId | null {
+  if (Math.hypot(x, z) <= 38) return "hub";
+  if (Math.abs(x) <= 6 && z <= -34 && z >= -62) return "corridorA";
+  if (Math.hypot(x, z + 90) <= 30) return "cables";
+  if (Math.abs(x) <= 6 && z <= -116 && z >= -142) return "corridorB";
+  if (Math.hypot(x, z + 175) <= 32) return "cloud";
+  return null;
+}
+
+export function insideWorld(x: number, z: number, margin = 0): boolean {
+  if (Math.hypot(x, z) <= 38 + margin) return true;
+  if (Math.abs(x) <= 6 + margin && z <= -34 + margin && z >= -62 - margin) return true;
+  if (Math.hypot(x, z + 90) <= 30 + margin) return true;
+  if (Math.abs(x) <= 6 + margin && z <= -116 + margin && z >= -142 - margin) return true;
+  if (Math.hypot(x, z + 175) <= 32 + margin) return true;
+  return false;
+}
+
 export type Combatant = {
   id: number;
   kind: "dummy" | "enemy";
@@ -22,6 +42,7 @@ export type Combatant = {
   aiT: number;
   skillT: number;
   summonT: number;
+  volleyT: number;
   home: THREE.Vector3;
 };
 

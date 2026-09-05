@@ -97,6 +97,23 @@ export function rollDrops(c: Combatant) {
     spawnFloat(c.pos, `+${n} ${i18next.t("items.scrap")}`, "#d6a35c");
   }
 
+  const inv = useInventory.getState();
+  if (isBoss) {
+    inv.addMaterial("core", 3);
+    inv.addMaterial("chip", 5);
+    spawnFloat(c.pos, `+3 ${i18next.t("items.core")}`, "#f472b6", true);
+  } else if (c.defId === "spyware" || c.defId === "rootkit") {
+    if (Math.random() < 0.25) {
+      inv.addMaterial("chip", 1);
+      spawnFloat(c.pos, `+1 ${i18next.t("items.chip")}`, "#67e8f9");
+    }
+  } else if (c.defId === "trojan" || c.defId === "firewall") {
+    if (Math.random() < 0.2) {
+      inv.addMaterial("core", 1);
+      spawnFloat(c.pos, `+1 ${i18next.t("items.core")}`, "#f472b6");
+    }
+  }
+
   const chance = isBoss ? 1 : 0.22;
   if (Math.random() > chance) return;
   const minIdx = isBoss ? RARITIES.indexOf("rare") : 0;

@@ -2,13 +2,14 @@ import { useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { CLASSES, SKILLS, PLAYER_BASE, type SkillDef, type ClassId } from "@it-heroes/shared";
-import { world, resetWorld, type Combatant } from "../state/world";
+import { world, resetWorld, insideWorld, type Combatant } from "../state/world";
 import { input } from "../input";
 import { useUi } from "../../state/uiStore";
 import { useInventory } from "../../state/inventoryStore";
 import { useHud } from "../../state/hudStore";
 import { computeMods, isPaused, useProgression } from "../../state/progressionStore";
 import { useQuests } from "../../state/questStore";
+import { resetSpawning } from "./EnemySystem";
 import { initStarterKit } from "../loot";
 import {
   dealDamage,
@@ -41,6 +42,7 @@ export default function CombatSystem() {
   useEffect(() => {
     resetWorld();
     ensureDummies();
+    resetSpawning();
     useInventory.getState().reset();
     useProgression.getState().reset();
     useQuests.getState().reset();
@@ -297,7 +299,7 @@ function updateProjectiles(dt: number, magic: number) {
       continue;
     }
     pr.pos.addScaledVector(pr.dir, pr.speed * dt);
-    if (Math.abs(pr.pos.x) > 60 || Math.abs(pr.pos.z) > 60) {
+    if (!insideWorld(pr.pos.x, pr.pos.z, 8)) {
       pr.alive = false;
       continue;
     }

@@ -36,13 +36,13 @@ export default function HubScene() {
 function Floor() {
   return (
     <group>
-      <mesh receiveShadow position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[140, 140]} />
+      <mesh receiveShadow position={[0, -0.02, -70]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[170, 320]} />
         <meshStandardMaterial color="#0a1120" roughness={0.85} metalness={0.2} />
       </mesh>
       <Grid
-        position={[0, 0.01, 0]}
-        args={[120, 120]}
+        position={[0, 0.01, -70]}
+        args={[170, 320]}
         cellSize={0.9}
         cellThickness={0.5}
         cellColor="#16324f"

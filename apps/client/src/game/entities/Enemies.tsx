@@ -37,8 +37,8 @@ function EnemyVisual({ c }: { c: Combatant }) {
     [c.color]
   );
 
-  const isBoss = c.defId === "bsod_lord";
-  const barY = isBoss ? 4.6 : 1.5 * c.scale + 0.9;
+  const isBoss = c.defId === "bsod_lord" || c.defId === "worm_queen" || c.defId === "mainframe";
+  const barY = c.defId === "mainframe" ? 6.4 : isBoss ? 4.6 : 1.5 * c.scale + 0.9;
 
   useFrame(() => {
     const g = group.current;
@@ -81,7 +81,13 @@ function EnemyVisual({ c }: { c: Combatant }) {
         {c.defId === "bug" && <BugBody body={mats.body} dark={mats.dark} core={core} emissive={c.emissive} />}
         {c.defId === "trojan" && <TrojanBody body={mats.body} dark={mats.dark} core={core} emissive={c.emissive} />}
         {c.defId === "spyware" && <SpywareBody dark={mats.dark} core={core} emissive={c.emissive} />}
+        {c.defId === "worm" && <WormBody body={mats.body} dark={mats.dark} core={core} emissive={c.emissive} />}
+        {c.defId === "rootkit" && <RootkitBody dark={mats.dark} core={core} emissive={c.emissive} />}
+        {c.defId === "botnet" && <BotnetBody dark={mats.dark} core={core} emissive={c.emissive} />}
+        {c.defId === "firewall" && <FirewallBody body={mats.body} dark={mats.dark} core={core} emissive={c.emissive} />}
         {c.defId === "bsod_lord" && <BossBody body={mats.body} dark={mats.dark} core={core} emissive={c.emissive} />}
+        {c.defId === "worm_queen" && <QueenBody body={mats.body} dark={mats.dark} core={core} emissive={c.emissive} />}
+        {c.defId === "mainframe" && <MainframeBody body={mats.body} dark={mats.dark} core={core} emissive={c.emissive} />}
       </group>
       <Billboard position={[0, barY, 0]}>
         <mesh>
@@ -94,7 +100,7 @@ function EnemyVisual({ c }: { c: Combatant }) {
         </mesh>
       </Billboard>
       {c.aiState === "slamTel" && (
-        <TelegraphRing color={c.emissive} radius={5.5} progress={1 - c.aiT / 1.0} />
+        <TelegraphRing color={c.emissive} radius={c.defId === "mainframe" ? 6.5 : c.defId === "worm_queen" ? 4.5 : 5.5} progress={1 - c.aiT / 1.0} />
       )}
     </group>
   );
@@ -282,6 +288,201 @@ function BossBody({ body, dark, core, emissive }: BodyProps) {
         <meshBasicMaterial color={emissive} transparent opacity={0.4} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <pointLight color={emissive} intensity={30} distance={18} position={[0, 2.5, 1]} />
+    </group>
+  );
+}
+
+function WormBody({ body, dark, core, emissive }: BodyProps) {
+  return (
+    <group>
+      {[-0.7, -0.15, 0.4].map((z, i) => (
+        <mesh key={i} castShadow position={[0, 0.42 - i * 0.04, z]} material={i === 2 ? dark : body}>
+          <sphereGeometry args={[0.42 - i * 0.07, 12, 10]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.5, 0.4]}>
+        <sphereGeometry args={[0.3, 12, 10]} />
+        <meshStandardMaterial ref={core} color="#0c1a05" emissive={emissive} emissiveIntensity={1.7} />
+      </mesh>
+      <mesh position={[-0.14, 0.52, 0.72]}>
+        <coneGeometry args={[0.07, 0.3, 6]} />
+        <meshBasicMaterial color={emissive} toneMapped={false} />
+      </mesh>
+      <mesh position={[0.14, 0.52, 0.72]}>
+        <coneGeometry args={[0.07, 0.3, 6]} />
+        <meshBasicMaterial color={emissive} toneMapped={false} />
+      </mesh>
+      {[0.3, 0.9, 1.5].map((a, i) => (
+        <mesh key={i} castShadow position={[Math.sin(a) * 0.55, 0.25, -Math.cos(a) * 0.2 - 0.2]} rotation={[0, 0, 0.6]} material={dark}>
+          <boxGeometry args={[0.34, 0.07, 0.07]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function RootkitBody({ dark, core, emissive }: { dark: THREE.Material; core: React.Ref<THREE.MeshStandardMaterial>; emissive: string }) {
+  const blades = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (blades.current) blades.current.rotation.y = world.time * 4;
+  });
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.75, 0]}>
+        <coneGeometry args={[0.34, 1.1, 6]} />
+        <meshStandardMaterial color="#1e1b4b" roughness={0.4} metalness={0.6} />
+      </mesh>
+      <mesh position={[0, 1.05, 0]}>
+        <sphereGeometry args={[0.13, 10, 8]} />
+        <meshStandardMaterial ref={core} color="#0a0a20" emissive={emissive} emissiveIntensity={2.2} />
+      </mesh>
+      <group ref={blades} position={[0, 0.45, 0]}>
+        {[0, 1, 2].map((i) => (
+          <mesh key={i} castShadow position={[Math.cos((i / 3) * Math.PI * 2) * 0.5, 0, Math.sin((i / 3) * Math.PI * 2) * 0.5]} rotation={[0, -(i / 3) * Math.PI * 2, 0.5]} material={dark}>
+            <boxGeometry args={[0.5, 0.06, 0.12]} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
+function BotnetBody({ dark, core, emissive }: { dark: THREE.Material; core: React.Ref<THREE.MeshStandardMaterial>; emissive: string }) {
+  return (
+    <group position={[0, 0.55 + Math.sin(world.time * 5) * 0.06, 0]}>
+      <mesh castShadow material={dark}>
+        <boxGeometry args={[0.42, 0.42, 0.42]} />
+      </mesh>
+      <mesh scale={0.6}>
+        <boxGeometry args={[0.42, 0.42, 0.42]} />
+        <meshStandardMaterial ref={core} color="#171204" emissive={emissive} emissiveIntensity={2} />
+      </mesh>
+      <mesh position={[0, 0.32, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, 0.3, 5]} />
+        <meshStandardMaterial color="#3f3f46" metalness={0.8} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 0.48, 0]}>
+        <sphereGeometry args={[0.05, 8, 6]} />
+        <meshBasicMaterial color={emissive} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function FirewallBody({ body, dark, core, emissive }: BodyProps) {
+  return (
+    <group>
+      <mesh castShadow position={[0, 1.1, 0]} rotation={[0.05, 0.1, 0.04]} material={body}>
+        <boxGeometry args={[1.2, 2.1, 0.4]} />
+      </mesh>
+      {[0.5, 1.1, 1.7].map((y, i) => (
+        <mesh key={i} position={[0, y, 0.22]}>
+          <boxGeometry args={[0.95, 0.1, 0.03]} />
+          <meshStandardMaterial ref={i === 1 ? core : undefined} color="#1c0713" emissive={emissive} emissiveIntensity={1.6} />
+        </mesh>
+      ))}
+      <mesh castShadow position={[-0.75, 0.5, 0]} material={dark}>
+        <boxGeometry args={[0.25, 1, 0.35]} />
+      </mesh>
+      <mesh castShadow position={[0.75, 0.5, 0]} material={dark}>
+        <boxGeometry args={[0.25, 1, 0.35]} />
+      </mesh>
+      <mesh castShadow position={[0, 2.35, 0]} material={dark}>
+        <coneGeometry args={[0.3, 0.5, 4]} />
+      </mesh>
+    </group>
+  );
+}
+
+function QueenBody({ body, dark, core, emissive }: BodyProps) {
+  const sacs = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (sacs.current) sacs.current.scale.setScalar(1 + Math.sin(world.time * 2.4) * 0.06);
+  });
+  return (
+    <group>
+      {[-1.5, -0.6, 0.3].map((z, i) => (
+        <mesh key={i} castShadow position={[0, 0.85 - i * 0.08, z]} material={i === 2 ? dark : body}>
+          <sphereGeometry args={[0.85 - i * 0.12, 14, 12]} />
+        </mesh>
+      ))}
+      <group ref={sacs} position={[0, 1.5, -0.9]}>
+        {[0, 1, 2].map((i) => (
+          <mesh key={i} position={[(i - 1) * 0.45, 0, 0]}>
+            <sphereGeometry args={[0.3, 10, 8]} />
+            <meshStandardMaterial color="#2c3a08" emissive={emissive} emissiveIntensity={0.9} transparent opacity={0.9} />
+          </mesh>
+        ))}
+      </group>
+      <mesh position={[0, 0.95, 0.3]}>
+        <sphereGeometry args={[0.6, 14, 12]} />
+        <meshStandardMaterial ref={core} color="#16210a" emissive={emissive} emissiveIntensity={1.5} />
+      </mesh>
+      {[-0.5, -0.17, 0.17, 0.5].map((x, i) => (
+        <mesh key={i} position={[x, 1.5, 0.75]} rotation={[0.5, 0, 0]}>
+          <coneGeometry args={[0.12, 0.6, 5]} />
+          <meshStandardMaterial color="#0f1804" emissive={emissive} emissiveIntensity={1.4} />
+        </mesh>
+      ))}
+      <mesh position={[-0.3, 1.0, 1.05]}>
+        <sphereGeometry args={[0.11, 8, 6]} />
+        <meshBasicMaterial color="#fef08a" toneMapped={false} />
+      </mesh>
+      <mesh position={[0.3, 1.0, 1.05]}>
+        <sphereGeometry args={[0.11, 8, 6]} />
+        <meshBasicMaterial color="#fef08a" toneMapped={false} />
+      </mesh>
+      <pointLight color={emissive} intensity={24} distance={20} position={[0, 2, 0]} />
+    </group>
+  );
+}
+
+function MainframeBody({ body, dark, core, emissive }: BodyProps) {
+  const rings = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (rings.current) {
+      rings.current.rotation.y = world.time * 0.7;
+      rings.current.children.forEach((r, i) => {
+        r.rotation.x = Math.PI / 2 + Math.sin(world.time * 0.8 + i) * 0.15;
+      });
+    }
+  });
+  return (
+    <group>
+      <mesh castShadow position={[0, 2.6, 0]} material={body}>
+        <cylinderGeometry args={[1.1, 1.5, 5.2, 8]} />
+      </mesh>
+      {[1.2, 2.6, 4.0].map((y, i) => (
+        <mesh key={i} position={[0, y, 0]}>
+          <cylinderGeometry args={[1.32, 1.32, 0.28, 8]} />
+          <meshStandardMaterial ref={i === 1 ? core : undefined} color="#160310" emissive={emissive} emissiveIntensity={1.7} />
+        </mesh>
+      ))}
+      <mesh castShadow position={[0, 5.6, 0]} material={dark}>
+        <sphereGeometry args={[0.7, 14, 12]} />
+      </mesh>
+      <mesh position={[0, 5.6, 0.55]}>
+        <boxGeometry args={[0.7, 0.2, 0.1]} />
+        <meshBasicMaterial color="#fdf4ff" toneMapped={false} />
+      </mesh>
+      <group ref={rings} position={[0, 2.6, 0]}>
+        {[1.9, 2.4].map((r, i) => (
+          <mesh key={i}>
+            <torusGeometry args={[r, 0.07, 8, 40]} />
+            <meshStandardMaterial color="#160310" emissive={emissive} emissiveIntensity={2} />
+          </mesh>
+        ))}
+      </group>
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={i} castShadow position={[Math.cos((i / 4) * Math.PI * 2) * 1.9, 0.5, Math.sin((i / 4) * Math.PI * 2) * 1.9]} material={dark}>
+          <boxGeometry args={[0.5, 1, 0.5]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.0, 2.2, 48]} />
+        <meshBasicMaterial color={emissive} transparent opacity={0.45} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+      <pointLight color={emissive} intensity={40} distance={26} position={[0, 3.5, 0]} />
     </group>
   );
 }

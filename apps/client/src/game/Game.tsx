@@ -4,6 +4,7 @@ import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { SKILLS, type ClassId } from "@it-heroes/shared";
 import HubScene from "./world/HubScene";
+import Biomes from "./world/Biomes";
 import Player from "./entities/Player";
 import Dummies from "./entities/Dummies";
 import Projectiles from "./entities/Projectiles";
@@ -20,6 +21,7 @@ import LootDrops from "./entities/LootDrops";
 import Npcs from "./entities/Npcs";
 import Inventory from "../ui/Inventory";
 import SkillTree from "../ui/SkillTree";
+import Forge from "../ui/Forge";
 import Dialog from "../ui/Dialog";
 import Hud from "../ui/Hud";
 import { initInput } from "./input";
@@ -34,6 +36,7 @@ export default function Game() {
   const setScreen = useUi((s) => s.setScreen);
   const invOpen = useInventory((s) => s.invOpen);
   const treeOpen = useProgression((s) => s.treeOpen);
+  const forgeOpen = useInventory((s) => s.forgeOpen);
 
   useEffect(() => {
     if (container.current) return initInput(container.current);
@@ -43,8 +46,10 @@ export default function Game() {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
         const prog = useProgression.getState();
-        if (prog.treeOpen) prog.setTreeOpen(false);
-        else if (useInventory.getState().invOpen) useInventory.getState().setInvOpen(false);
+        const inv = useInventory.getState();
+        if (inv.forgeOpen) inv.setForgeOpen(false);
+        else if (prog.treeOpen) prog.setTreeOpen(false);
+        else if (inv.invOpen) inv.setInvOpen(false);
         else setScreen("menu");
       }
       if (e.code === "KeyI" || e.code === "Tab") {
@@ -78,6 +83,7 @@ export default function Game() {
           <LootSystem />
           <NpcSystem />
           <HubScene />
+          <Biomes />
           <Player />
           <Dummies />
           <Enemies />
@@ -105,6 +111,7 @@ export default function Game() {
       <Hud />
       {invOpen && <Inventory />}
       {treeOpen && <SkillTree />}
+      {forgeOpen && <Forge />}
       <Dialog />
     </div>
   );
@@ -158,12 +165,20 @@ function HudSync() {
     const p = world.player;
     setVitals(p.health, p.mana, p.stamina);
     setDead(!p.alive);
-    const boss = world.combatants.find((c) => c.kind === "enemy" && c.defId === "bsod_lord");
-    if (boss && (boss.aiState !== "sleep" || boss.dead)) {
-      setBoss(Math.max(0, boss.hp / boss.maxHp), "enemies.bsod_lord");
-    } else {
-      setBoss(-1, "");
+    const bossDefs: Record<string, string> = {
+      bsod_lord: "enemies.bsod_lord",
+      worm_queen: "enemies.worm_queen",
+      mainframe: "enemies.mainframe",
+    };
+    let shown = false;
+    for (const c of world.combatants) {
+      if (c.kind !== "enemy" || !c.defId || !(c.defId in bossDefs)) continue;
+      if (c.aiState === "sleep") continue;
+      setBoss(Math.max(0, c.hp / c.maxHp), bossDefs[c.defId]);
+      shown = true;
+      break;
     }
+    if (!shown) setBoss(-1, "");
     const skills = classSkills(classId);
     setCds(
       skills[0] ? p.cd.basic / Math.max(0.01, skills[0].cooldown) : 0,

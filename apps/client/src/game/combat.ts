@@ -191,6 +191,7 @@ export function ensureDummies() {
       aiT: 0,
       skillT: 0,
       summonT: 0,
+      volleyT: 0,
       home: new THREE.Vector3(x, 0, z),
     });
   }

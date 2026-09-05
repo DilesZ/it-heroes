@@ -10,6 +10,7 @@ import { useQuests } from "./questStore";
 export function isPaused(): boolean {
   return (
     useInventory.getState().invOpen ||
+    useInventory.getState().forgeOpen ||
     useProgression.getState().treeOpen ||
     useQuests.getState().dialogNpc !== null
   );

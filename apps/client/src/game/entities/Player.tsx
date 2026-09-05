@@ -2,7 +2,7 @@ import { useMemo, useRef } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { PLAYER_BASE, CLASSES } from "@it-heroes/shared";
-import { world } from "../state/world";
+import { world, insideWorld } from "../state/world";
 import { input } from "../input";
 import { useUi } from "../../state/uiStore";
 import { isPaused } from "../../state/progressionStore";
@@ -96,11 +96,9 @@ export default function Player() {
     }
 
     p.pos.addScaledVector(p.vel, dt);
-    const dist = Math.hypot(p.pos.x, p.pos.z);
-    if (dist > world.hubBounds) {
-      const s = world.hubBounds / dist;
-      p.pos.x *= s;
-      p.pos.z *= s;
+    if (!insideWorld(p.pos.x, p.pos.z)) {
+      p.pos.addScaledVector(p.vel, -dt);
+      p.vel.multiplyScalar(0.2);
     }
 
     p.stamina = Math.min(PLAYER_BASE.maxStamina, p.stamina + PLAYER_BASE.staminaRegen * dt);

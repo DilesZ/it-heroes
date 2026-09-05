@@ -18,6 +18,7 @@ export const NPCS: NpcDef[] = [
   { id: "npc_chief", nameKey: "npc.chief.name", pos: [3.5, 0, 3], color: "#f59e0b", kind: "tech" },
   { id: "npc_intern", nameKey: "npc.intern.name", pos: [-4.5, 0, 7.5], color: "#34d399", kind: "tech" },
   { id: "npc_bot", nameKey: "npc.bot.name", pos: [-2, 0, 12], color: "#94a3b8", kind: "bot" },
+  { id: "npc_forge", nameKey: "npc.forge.name", pos: [7.5, 0, -1.5], color: "#fb923c", kind: "tech" },
 ];
 
 function Marker({ npcId }: { npcId: string }) {

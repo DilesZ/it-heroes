@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { ENEMIES } from "@it-heroes/shared";
-import {
-  useQuests,
+import { useQuests,
   activeMainQuest,
   activeSideQuests,
   isTurnable,
   questDef,
 } from "../state/questStore";
+import { useInventory } from "../state/inventoryStore";
 import { NPCS } from "../game/entities/Npcs";
 
 const ENEMY_NAME: Record<string, string> = Object.fromEntries(ENEMIES.map((d) => [d.id, d.nameKey]));
@@ -167,6 +167,7 @@ export default function Dialog() {
           {dialogNpc === "npc_chief" && <ChiefBody />}
           {dialogNpc === "npc_intern" && <InternBody />}
           {dialogNpc === "npc_bot" && <BotBody />}
+          {dialogNpc === "npc_forge" && <ForgeBody />}
         </div>
       </div>
     </div>
@@ -180,6 +181,25 @@ function BotBody() {
     <>
       <p className="text-[15px] leading-relaxed text-slate-300">{t("npc.bot.greet")}</p>
       <DialogButton label={t("dialog.leave")} onClick={() => setDialog(null)} />
+    </>
+  );
+}
+
+function ForgeBody() {
+  const { t } = useTranslation();
+  const setDialog = useQuests((s) => s.setDialog);
+  const setForgeOpen = useInventory((s) => s.setForgeOpen);
+  return (
+    <>
+      <p className="text-[15px] leading-relaxed text-slate-300">{t("npc.forge.greet")}</p>
+      <DialogButton
+        label={t("dialog.forge")}
+        primary
+        onClick={() => {
+          setDialog(null);
+          setForgeOpen(true);
+        }}
+      />
     </>
   );
 }
