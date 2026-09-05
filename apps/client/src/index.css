@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Orbitron", sans-serif;
+  --font-body: "Rajdhani", sans-serif;
+  --color-tech-bg: #05070f;
+  --color-tech-panel: #0b1122;
+  --color-tech-line: #1e3a5f;
+  --color-tech-cyan: #22d3ee;
+  --color-tech-violet: #a78bfa;
+  --color-tech-green: #34d399;
+}
+
+body {
+  font-family: var(--font-body);
+  color: #dbe4f3;
+  user-select: none;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.panel {
+  background: linear-gradient(160deg, rgba(11, 17, 34, 0.92), rgba(7, 11, 24, 0.95));
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  box-shadow:
+    0 0 40px rgba(34, 211, 238, 0.08),
+    inset 0 0 24px rgba(34, 211, 238, 0.04);
+}
+
+.btn-tech {
+  position: relative;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  background: linear-gradient(160deg, rgba(14, 22, 44, 0.9), rgba(9, 14, 30, 0.95));
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+}
+
+.btn-tech:hover:not(:disabled) {
+  border-color: rgba(34, 211, 238, 0.9);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-tech:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.02) 0px,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+}

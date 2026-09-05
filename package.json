@@ -1,0 +1,19 @@
+{
+  "name": "it-heroes",
+  "private": true,
+  "version": "0.1.0",
+  "description": "IT Heroes - Action RPG de tecnicos de sistemas",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/client",
+    "build": "npm run build --workspace apps/client",
+    "typecheck": "npm run typecheck --workspace apps/client && npm run typecheck --workspace packages/shared",
+    "preview": "npm run preview --workspace apps/client"
+  }
+}
