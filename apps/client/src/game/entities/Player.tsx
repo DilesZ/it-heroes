@@ -65,6 +65,7 @@ export default function Player() {
     if (moveVec.lengthSq() > 0) moveVec.normalize();
 
     if (
+      p.alive &&
       (input.consumePress("ShiftLeft") || input.consumePress("ShiftRight") || input.consumePress("Space")) &&
       p.state !== "dodge" &&
       p.stamina >= PLAYER_BASE.dodgeStaminaCost
@@ -87,7 +88,7 @@ export default function Player() {
         p.invulnerable = false;
       }
     } else {
-      tmpVec.copy(moveVec).multiplyScalar(PLAYER_BASE.speed * p.speedBonus);
+      tmpVec.copy(moveVec).multiplyScalar(PLAYER_BASE.speed * p.speedBonus * (p.alive ? 1 : 0));
       p.vel.lerp(tmpVec, 1 - Math.exp(-12 * dt));
       p.state = p.vel.lengthSq() > 0.3 ? "walk" : "idle";
     }
@@ -112,6 +113,8 @@ export default function Player() {
     while (diff > Math.PI) diff -= Math.PI * 2;
     while (diff < -Math.PI) diff += Math.PI * 2;
     g.rotation.y = yaw + diff * (1 - Math.exp(-18 * dt));
+    const targetTilt = p.alive ? 0 : -1.35;
+    g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, targetTilt, 1 - Math.exp(-6 * dt));
 
     const speed = p.vel.length();
     walkT.current += dt * (2.2 + speed * 0.65);

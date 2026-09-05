@@ -12,6 +12,8 @@ import FloatingTexts from "./entities/FloatingTexts";
 import { Slashes, Blasts } from "./entities/Fx";
 import { Turrets, Traps } from "./entities/Summons";
 import CombatSystem from "./systems/CombatSystem";
+import EnemySystem from "./systems/EnemySystem";
+import Enemies from "./entities/Enemies";
 import Hud from "../ui/Hud";
 import { initInput } from "./input";
 import { world } from "./state/world";
@@ -48,9 +50,11 @@ export default function Game() {
         <Suspense fallback={null}>
           <CameraRig />
           <CombatSystem />
+          <EnemySystem />
           <HubScene />
           <Player />
           <Dummies />
+          <Enemies />
           <Projectiles />
           <Particles />
           <Slashes />
@@ -113,6 +117,8 @@ function HudSync() {
   const acc = useRef(0);
   const setVitals = useHud((s) => s.setVitals);
   const setCds = useHud((s) => s.setCds);
+  const setDead = useHud((s) => s.setDead);
+  const setBoss = useHud((s) => s.setBoss);
   const classId = useUi((s) => s.classId);
   useFrame((_, dt) => {
     acc.current += dt;
@@ -120,6 +126,13 @@ function HudSync() {
     acc.current = 0;
     const p = world.player;
     setVitals(p.health, p.mana, p.stamina);
+    setDead(!p.alive);
+    const boss = world.combatants.find((c) => c.kind === "enemy" && c.defId === "bsod_lord");
+    if (boss && (boss.aiState !== "sleep" || boss.dead)) {
+      setBoss(Math.max(0, boss.hp / boss.maxHp), "enemies.bsod_lord");
+    } else {
+      setBoss(-1, "");
+    }
     const skills = classSkills(classId);
     setCds(
       skills[0] ? p.cd.basic / Math.max(0.01, skills[0].cooldown) : 0,

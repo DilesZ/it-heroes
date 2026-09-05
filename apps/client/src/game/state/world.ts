@@ -18,6 +18,11 @@ export type Combatant = {
   emissive: string;
   bobPhase: number;
   attackT: number;
+  aiState: "sleep" | "idle" | "chase" | "windup" | "cooldown" | "slamTel";
+  aiT: number;
+  skillT: number;
+  summonT: number;
+  home: THREE.Vector3;
 };
 
 export type Projectile = {
@@ -29,6 +34,7 @@ export type Projectile = {
   life: number;
   color: string;
   pierce: number;
+  fromPlayer: boolean;
 };
 
 export type Turret = { id: number; pos: THREE.Vector3; life: number; shotT: number };
@@ -85,11 +91,14 @@ export const world = {
     shieldT: 0,
     hasteT: 0,
     cd: { basic: 0, s1: 0, s2: 0 },
+    alive: true,
+    deathT: 0,
   },
   combatants: [] as Combatant[],
   turretVersion: 0,
   trapVersion: 0,
   dummyVersion: 0,
+  enemyVersion: 0,
   projectiles: makePool(64, () => ({
     alive: false,
     pos: new THREE.Vector3(),
@@ -99,6 +108,7 @@ export const world = {
     life: 0,
     color: "#fff",
     pierce: 0,
+    fromPlayer: true,
   })),
   turrets: [] as Turret[],
   traps: [] as Trap[],
@@ -143,6 +153,8 @@ export function resetWorld() {
   pl.shield = 0;
   pl.shieldT = 0;
   pl.hasteT = 0;
+  pl.alive = true;
+  pl.deathT = 0;
   pl.cd.basic = 0;
   pl.cd.s1 = 0;
   pl.cd.s2 = 0;

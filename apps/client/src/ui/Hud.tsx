@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useUi } from "../state/uiStore";
 import { useHud } from "../state/hudStore";
 import SkillBar from "./SkillBar";
+import BossBar from "./BossBar";
 import { CLASSES, GAME_NAME, VERSION, PLAYER_BASE } from "@it-heroes/shared";
 
 function Bar({
@@ -35,11 +36,20 @@ export default function Hud() {
   const { t } = useTranslation();
   const classId = useUi((s) => s.classId);
   const setScreen = useUi((s) => s.setScreen);
-  const { hp, maxHp, mana, maxMana, stamina, maxStamina } = useHud();
+  const { hp, maxHp, mana, maxMana, stamina, maxStamina, dead } = useHud();
 
   return (
     <div className="pointer-events-none absolute inset-0">
       <SkillBar />
+      <BossBar />
+      {dead && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-950/40 backdrop-blur-[1px]">
+          <h2 className="font-display text-4xl font-black tracking-[0.25em] text-red-300 drop-shadow-[0_0_20px_rgba(244,63,94,0.7)]">
+            {t("hud.defeated")}
+          </h2>
+          <p className="mt-3 text-sm tracking-widest text-red-200/70">{t("hud.respawn")}</p>
+        </div>
+      )}
       <div className="absolute bottom-4 left-4 flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <span className="w-10 text-right font-display text-[10px] font-bold tracking-widest text-rose-300">HP</span>

@@ -48,6 +48,7 @@ export function spawnProjectile(opts: {
   damage: number;
   color: string;
   life?: number;
+  fromPlayer?: boolean;
 }) {
   for (const pr of world.projectiles) {
     if (pr.alive) continue;
@@ -59,6 +60,7 @@ export function spawnProjectile(opts: {
     pr.color = opts.color;
     pr.life = opts.life ?? 2;
     pr.pierce = 0;
+    pr.fromPlayer = opts.fromPlayer ?? true;
     return;
   }
 }
@@ -114,6 +116,32 @@ export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean
   }
 }
 
+export function damagePlayer(amount: number, from?: THREE.Vector3) {
+  const p = world.player;
+  if (!p.alive || p.invulnerable) return;
+  let dmg = Math.max(1, Math.round(amount - p.defense));
+  if (p.shield > 0) {
+    const absorbed = Math.min(p.shield, dmg);
+    p.shield -= absorbed;
+    dmg -= absorbed;
+    spawnParticles(p.pos, "#22d3ee", 8, 4, 0.9);
+  }
+  if (dmg > 0) {
+    p.health -= dmg;
+    spawnFloat(p.pos, `-${dmg}`, "#f87171");
+    spawnParticles(p.pos, "#f87171", 6, 4, 0.8);
+  }
+  world.shake = Math.max(world.shake, 0.5);
+  if (p.health <= 0) {
+    p.health = 0;
+    p.alive = false;
+    p.deathT = 0;
+    spawnParticles(p.pos, "#f43f5e", 30, 9, 1.4);
+    spawnFloat(p.pos, "K.O.", "#f43f5e", true);
+  }
+  void from;
+}
+
 export function aliveCombatants(): Combatant[] {
   return world.combatants.filter((c) => !c.dead);
 }
@@ -143,6 +171,11 @@ export function ensureDummies() {
       emissive: "#f97316",
       bobPhase: Math.random() * Math.PI * 2,
       attackT: 0,
+      aiState: "idle",
+      aiT: 0,
+      skillT: 0,
+      summonT: 0,
+      home: new THREE.Vector3(x, 0, z),
     });
   }
   world.dummyVersion++;

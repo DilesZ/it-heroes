@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { CLASSES, SKILLS, type SkillDef, type ClassId } from "@it-heroes/shared";
+import { CLASSES, SKILLS, PLAYER_BASE, type SkillDef, type ClassId } from "@it-heroes/shared";
 import { world, resetWorld, type Combatant } from "../state/world";
 import { input } from "../input";
 import { useUi } from "../../state/uiStore";
 import {
   dealDamage,
+  damagePlayer,
   spawnParticles,
   spawnFloat,
   spawnProjectile,
@@ -61,18 +62,34 @@ export default function CombatSystem() {
     const attack = CLASSES[classId].baseAttack + p.attackBonus;
     const magic = CLASSES[classId].baseMagic + p.magicBonus;
 
-    if (input.isMouseDown(0)) {
+    if (!p.alive) {
+      p.deathT += dt;
+      if (p.deathT > 2.5) {
+        p.alive = true;
+        p.health = PLAYER_BASE.maxHealth;
+        p.mana = PLAYER_BASE.maxMana;
+        p.stamina = PLAYER_BASE.maxStamina;
+        p.pos.set(0, 0, 10);
+        p.vel.set(0, 0, 0);
+        p.shield = 0;
+        p.shieldT = 0;
+        spawnParticles(p.pos, "#22d3ee", 20, 6, 1.1);
+        spawnFloat(p.pos, "REBOOT OK", "#22d3ee");
+      }
+    } else if (input.isMouseDown(0)) {
       if (p.cd.basic <= 0) {
         if (basic.type === "melee") tryMeleeAttack(basic, attack, p.cd);
         else tryProjectileAttack(basic, classId, p.cd, "basic");
       }
     }
     if (input.consumePress("Digit1")) {
+      if (!p.alive) return;
       if (s1.id === "firewall_trap") tryTrap(s1, p.cd, aimPoint, hasAim);
       else if (s1.type === "aoe") tryAoe(s1, classId, p.cd, "s1");
       else if (s1.type === "summon") trySummon(s1, p.cd, "s1");
     }
     if (input.consumePress("Digit2")) {
+      if (!p.alive) return;
       if (s2.type === "buff") tryBuff(s2, p.cd, "s2");
       else if (s2.type === "aoe") tryAoe(s2, classId, p.cd, "s2");
     }
@@ -249,6 +266,13 @@ function updateCombatants(dt: number) {
     c.vel.multiplyScalar(Math.exp(-6 * dt));
     c.pos.addScaledVector(c.vel, dt);
   }
+  const before = world.combatants.length;
+  for (let i = world.combatants.length - 1; i >= 0; i--) {
+    const c = world.combatants[i];
+    if (c.kind === "dummy") continue;
+    if (c.dead && c.respawnT < 0 && c.deadT > 1.2) world.combatants.splice(i, 1);
+  }
+  if (world.combatants.length !== before) world.enemyVersion++;
 }
 
 function updateProjectiles(dt: number, magic: number) {
@@ -262,6 +286,15 @@ function updateProjectiles(dt: number, magic: number) {
     pr.pos.addScaledVector(pr.dir, pr.speed * dt);
     if (Math.abs(pr.pos.x) > 60 || Math.abs(pr.pos.z) > 60) {
       pr.alive = false;
+      continue;
+    }
+    if (!pr.fromPlayer) {
+      toTarget.copy(world.player.pos).sub(pr.pos).setY(0);
+      if (world.player.alive && toTarget.length() < 0.7) {
+        damagePlayer(pr.damage, pr.pos);
+        spawnParticles(pr.pos, pr.color, 6, 4, 0.8);
+        pr.alive = false;
+      }
       continue;
     }
     for (const c of aliveCombatants()) {
