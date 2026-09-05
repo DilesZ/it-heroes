@@ -20,9 +20,13 @@ import {
   spawnProjectile,
   spawnSlash,
   spawnBlast,
+  spawnBeam,
   aliveCombatants,
   ensureDummies,
 } from "../combat";
+
+export type Slot = "basic" | "s1" | "s2" | "sp";
+export type Cd = { basic: number; s1: number; s2: number; sp: number };
 
 const mouseVec = new THREE.Vector2();
 const aimPoint = new THREE.Vector3();
@@ -31,9 +35,18 @@ const toTarget = new THREE.Vector3();
 const spawnPos = new THREE.Vector3();
 let lastNoMana = -10;
 
-function classSkills(classId: ClassId): [SkillDef, SkillDef, SkillDef] {
+function classSkills(classId: ClassId): [SkillDef, SkillDef, SkillDef, SkillDef] {
   const list = SKILLS.filter((s) => s.classId === classId);
-  return [list[0], list[1], list[2]];
+  const by = (slot: Slot) => list.find((s) => s.slot === slot)!;
+  return [by("basic"), by("s1"), by("s2"), by("sp")];
+}
+
+function isDashStrike(): boolean {
+  return world.time - world.lastDodgeEnd < 0.4;
+}
+
+export function dashMult(): number {
+  return isDashStrike() ? 1.75 : 1;
 }
 
 export default function CombatSystem() {
@@ -59,11 +72,25 @@ export default function CombatSystem() {
   useFrame((_, raw) => {
     if (isPaused()) return;
     const rawDt = Math.min(raw, 0.05);
-    world.hitstopT = Math.max(0, world.hitstopT - rawDt);
-    world.timeScale = world.hitstopT > 0 ? 0.06 : 1;
+    if (world.cineT > 0) {
+      world.cineT -= rawDt;
+      world.timeScale = 0.12;
+      if (world.cineT <= 0 && world.pendingBoon) {
+        world.pendingBoon = false;
+        useProgression.getState().openDraft();
+      }
+    } else {
+      world.hitstopT = Math.max(0, world.hitstopT - rawDt);
+      world.timeScale = world.hitstopT > 0 ? 0.06 : 1;
+    }
     const dt = rawDt * world.timeScale;
     world.time += dt;
     world.shake = Math.max(0, world.shake - rawDt * 2.2);
+    world.zoomPunch = Math.max(0, world.zoomPunch - rawDt * 1.4);
+    if (world.comboT > 0) {
+      world.comboT -= dt;
+      if (world.comboT <= 0) world.comboN = 0;
+    }
 
     mouseVec.set(input.mouseNdc.x, input.mouseNdc.y);
     raycaster.setFromCamera(mouseVec, camera);
@@ -76,8 +103,9 @@ export default function CombatSystem() {
     p.cd.basic = Math.max(0, p.cd.basic - dt);
     p.cd.s1 = Math.max(0, p.cd.s1 - dt);
     p.cd.s2 = Math.max(0, p.cd.s2 - dt);
+    p.cd.sp = Math.max(0, p.cd.sp - dt);
 
-    const [basic, s1, s2] = classSkills(classId);
+    const [basic, s1, s2, sp] = classSkills(classId);
     const attack = CLASSES[classId].baseAttack + p.attackBonus;
     const magic = CLASSES[classId].baseMagic + p.magicBonus;
 
@@ -113,6 +141,10 @@ export default function CombatSystem() {
       if (s2.type === "buff") tryBuff(s2, p.cd, "s2");
       else if (s2.type === "aoe") tryAoe(s2, classId, p.cd, "s2");
     }
+    if (input.consumePress("KeyQ")) {
+      if (!p.alive) return;
+      trySpecial(sp, classId, p.cd);
+    }
 
     updateCombatants(dt);
     updateProjectiles(dt, magic);
@@ -132,14 +164,19 @@ function noMana(pos: THREE.Vector3) {
   spawnFloat(pos, "SIN MANA", "#f87171");
 }
 
-function tryMeleeAttack(basic: SkillDef, attack: number, cd: { basic: number }) {
+function tryMeleeAttack(basic: SkillDef, attack: number, cd: Cd) {
   const p = world.player;
   if (p.mana < basic.manaCost) return;
   p.mana -= basic.manaCost;
   cd.basic = basic.cooldown * (p.hasteT > 0 ? 0.55 : 1) * p.cdMult;
-  spawnSlash(p.pos, p.facing, basic.color, basic.range);
+  const dash = isDashStrike();
+  spawnSlash(p.pos, p.facing, basic.color, basic.range * (dash ? 1.4 : 1));
   sfx.melee();
-  const dmg = basic.damage * attack * p.slotDmg.basic;
+  if (dash && world.time - world.lastDashFloat > 1) {
+    world.lastDashFloat = world.time;
+    spawnFloat(p.pos, "DASH STRIKE", basic.color);
+  }
+  const dmg = basic.damage * attack * p.slotDmg.basic * dashMult();
   const arc = 2.1;
   for (const c of aliveCombatants()) {
     toTarget.copy(c.pos).sub(p.pos).setY(0);
@@ -159,7 +196,7 @@ function tryMeleeAttack(basic: SkillDef, attack: number, cd: { basic: number }) 
   }
 }
 
-function tryProjectileAttack(basic: SkillDef, classId: ClassId, cd: { basic: number; s1: number; s2: number }, slot: "basic") {
+function tryProjectileAttack(basic: SkillDef, classId: ClassId, cd: Cd, slot: "basic") {
   const p = world.player;
   if (p.mana < basic.manaCost) {
     if (world.time - lastNoMana > 0.8) {
@@ -177,14 +214,14 @@ function tryProjectileAttack(basic: SkillDef, classId: ClassId, cd: { basic: num
     pos: spawnPos,
     dir: new THREE.Vector3(Math.sin(p.facing), 0, Math.cos(p.facing)),
     speed: classId === "blueteam" ? 28 : 24,
-    damage: basic.damage * stat * p.slotDmg.basic,
+    damage: basic.damage * stat * p.slotDmg.basic * dashMult(),
     color: basic.color,
   });
   sfx.shoot();
   spawnParticles(spawnPos, basic.color, 3, 2, 0.7);
 }
 
-function tryAoe(skill: SkillDef, classId: ClassId, cd: { basic: number; s1: number; s2: number }, slot: "s1" | "s2") {
+function tryAoe(skill: SkillDef, classId: ClassId, cd: Cd, slot: "s1" | "s2") {
   const p = world.player;
   if (p.mana < skill.manaCost) {
     noMana(p.pos);
@@ -212,7 +249,7 @@ function tryAoe(skill: SkillDef, classId: ClassId, cd: { basic: number; s1: numb
   }
 }
 
-function tryTrap(s1: SkillDef, cd: { basic: number; s1: number; s2: number }, aim: THREE.Vector3, hasAim: boolean) {
+function tryTrap(s1: SkillDef, cd: Cd, aim: THREE.Vector3, hasAim: boolean) {
   const p = world.player;
   if (p.mana < s1.manaCost) {
     noMana(p.pos);
@@ -232,7 +269,7 @@ function tryTrap(s1: SkillDef, cd: { basic: number; s1: number; s2: number }, ai
   spawnParticles(aim, s1.color, 8, 3, 0.8);
 }
 
-function tryBuff(skill: SkillDef, cd: { basic: number; s1: number; s2: number }, slot: "s2") {
+function tryBuff(skill: SkillDef, cd: Cd, slot: "s2") {
   const p = world.player;
   if (p.mana < skill.manaCost) {
     noMana(p.pos);
@@ -252,7 +289,7 @@ function tryBuff(skill: SkillDef, cd: { basic: number; s1: number; s2: number },
   }
 }
 
-function trySummon(skill: SkillDef, cd: { basic: number; s1: number; s2: number }, slot: "basic" | "s1" | "s2") {
+function trySummon(skill: SkillDef, cd: Cd, slot: Slot) {
   const p = world.player;
   if (p.mana < skill.manaCost) {
     noMana(p.pos);
@@ -269,6 +306,81 @@ function trySummon(skill: SkillDef, cd: { basic: number; s1: number; s2: number 
   world.turretVersion++;
   spawnParticles(spawnPos, skill.color, 14, 4, 1);
   spawnFloat(spawnPos, "TURRET ON", skill.color);
+}
+
+function trySpecial(sp: SkillDef, classId: ClassId, cd: Cd) {
+  const p = world.player;
+  if (p.cd.sp > 0) return;
+  if (p.mana < sp.manaCost) {
+    noMana(p.pos);
+    return;
+  }
+  p.mana -= sp.manaCost;
+  p.cd.sp = sp.cooldown * p.cdMult;
+  sfx.ult();
+  world.shake = Math.max(world.shake, 0.8);
+  world.hitstopT = Math.max(world.hitstopT, 0.09);
+  const mult = p.slotDmg.sp;
+  if (sp.id === "bluescreen") {
+    const attack = CLASSES[classId].baseAttack + p.attackBonus;
+    const radius = sp.radius ?? 6;
+    spawnBlast(p.pos, "#38bdf8", radius);
+    spawnBlast(p.pos, "#ffffff", radius * 0.6);
+    spawnParticles(p.pos, sp.color, 55, 13, 1.6);
+    spawnFloat(p.pos, ":(", sp.color, true);
+    for (const c of aliveCombatants()) {
+      toTarget.copy(c.pos).sub(p.pos).setY(0);
+      if (toTarget.length() > radius + 0.3 * c.scale) continue;
+      const crit = rollCrit();
+      dealDamage(c, sp.damage * attack * mult * (crit ? 2 : 1), {
+        crit,
+        color: sp.color,
+        from: p.pos,
+        knock: 12,
+      });
+    }
+  } else if (sp.id === "rmrf") {
+    const magic = CLASSES[classId].baseMagic + p.magicBonus;
+    spawnBlast(p.pos, sp.color, 3);
+    spawnParticles(p.pos, sp.color, 40, 11, 1.4);
+    spawnFloat(p.pos, "rm -rf /", sp.color, true);
+    const n = 26;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + world.time;
+      spawnPos.copy(p.pos);
+      spawnPos.y = 1.1;
+      toTarget.set(Math.sin(a), 0, Math.cos(a));
+      spawnProjectile({
+        pos: spawnPos,
+        dir: toTarget,
+        speed: 20,
+        damage: sp.damage * magic * mult,
+        color: i % 2 ? sp.color : "#f0abfc",
+        life: 1.5,
+      });
+    }
+  } else if (sp.id === "killswitch") {
+    const attack = CLASSES[classId].baseAttack + p.attackBonus;
+    const len = sp.range;
+    const dir = new THREE.Vector3(Math.sin(p.facing), 0, Math.cos(p.facing));
+    spawnBeam(p.pos, p.facing, len, sp.color);
+    spawnParticles(p.pos, sp.color, 25, 8, 1.2);
+    spawnFloat(p.pos, "KILL SWITCH", sp.color, true);
+    for (const c of aliveCombatants()) {
+      toTarget.copy(c.pos).sub(p.pos).setY(0);
+      const fwd = toTarget.x * dir.x + toTarget.z * dir.z;
+      if (fwd < 0 || fwd > len + c.scale) continue;
+      const side = Math.abs(toTarget.x * dir.z - toTarget.z * dir.x);
+      if (side > 1.0 + 0.35 * c.scale) continue;
+      const crit = rollCrit();
+      dealDamage(c, sp.damage * attack * mult * (crit ? 2 : 1), {
+        crit,
+        color: sp.color,
+        from: p.pos,
+        knock: 6,
+      });
+    }
+  }
 }
 
 function updateCombatants(dt: number) {
@@ -431,4 +543,5 @@ function updateFx(dt: number) {
   }
   for (const s of world.slashes) if (s.t > 0) s.t = Math.max(0, s.t - dt * 5.5);
   for (const b of world.blasts) if (b.t > 0) b.t = Math.max(0, b.t - dt * 2.4);
+  for (const b of world.beams) if (b.t > 0) b.t = Math.max(0, b.t - dt * 3.2);
 }

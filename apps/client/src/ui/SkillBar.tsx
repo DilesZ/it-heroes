@@ -6,7 +6,9 @@ import { world } from "../game/state/world";
 import SkillIcon from "./SkillIcon";
 
 function classSkills(classId: ClassId) {
-  return SKILLS.filter((s) => s.classId === classId);
+  const list = SKILLS.filter((s) => s.classId === classId);
+  const by = (slot: "basic" | "s1" | "s2" | "sp") => list.find((s) => s.slot === slot);
+  return [by("basic"), by("s1"), by("s2"), by("sp")];
 }
 
 function Slot({
@@ -59,7 +61,7 @@ function Slot({
 
 export default function SkillBar() {
   const classId = useUi((s) => s.classId);
-  const { cdBasic, cdS1, cdS2, shield, haste } = useHud();
+  const { cdBasic, cdS1, cdS2, cdSp, shield, haste } = useHud();
   const skills = classSkills(classId);
 
   return (
@@ -80,6 +82,7 @@ export default function SkillBar() {
         {skills[0] && <Slot skillId={skills[0].id} hotkey="LMB" cdFrac={cdBasic} />}
         {skills[1] && <Slot skillId={skills[1].id} hotkey="1" cdFrac={cdS1} />}
         {skills[2] && <Slot skillId={skills[2].id} hotkey="2" cdFrac={cdS2} />}
+        {skills[3] && <Slot skillId={skills[3].id} hotkey="Q" cdFrac={cdSp} />}
       </div>
     </div>
   );

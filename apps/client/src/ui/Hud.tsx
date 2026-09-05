@@ -4,6 +4,7 @@ import { useHud } from "../state/hudStore";
 import SkillBar from "./SkillBar";
 import BossBar from "./BossBar";
 import { QuestTracker, Toasts } from "./Dialog";
+import { world } from "../game/state/world";
 import { useInventory } from "../state/inventoryStore";
 import { useProgression, MAX_LEVEL } from "../state/progressionStore";
 import { CLASSES, GAME_NAME, VERSION, PLAYER_BASE, XP_CURVE } from "@it-heroes/shared";
@@ -47,6 +48,8 @@ export default function Hud() {
   const xp = useProgression((s) => s.xp);
   const skillPoints = useProgression((s) => s.skillPoints);
   const setTreeOpen = useProgression((s) => s.setTreeOpen);
+  const comboN = useHud((s) => s.comboN);
+  const comboMult = useHud((s) => s.comboMult);
   const xpNeed = level >= MAX_LEVEL ? 1 : XP_CURVE(level);
 
   return (
@@ -55,6 +58,28 @@ export default function Hud() {
       <BossBar />
       <QuestTracker />
       <Toasts />
+      {comboN >= 3 && (
+        <div className="absolute right-6 top-1/3 flex flex-col items-center">
+          <span
+            className="font-display text-4xl font-black tabular-nums"
+            style={{
+              color: comboN >= 50 ? "#fbbf24" : comboN >= 25 ? "#fb7185" : "#e2e8f0",
+              textShadow: "0 0 16px rgba(0,0,0,0.8), 0 0 24px currentColor",
+            }}
+          >
+            {comboN}
+          </span>
+          <span className="font-display text-[10px] font-bold tracking-[0.3em] text-slate-300">
+            {t("hud.combo")}{comboMult > 1 ? ` ×${comboMult}` : ""}
+          </span>
+          <div className="mt-1 h-1 w-16 overflow-hidden rounded bg-black/60">
+            <div
+              className="h-full bg-gradient-to-r from-amber-400 to-rose-400"
+              style={{ width: `${Math.min(100, (world.comboT / 2.2) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
       <div
         className="absolute inset-0 transition-opacity duration-200"
         style={{

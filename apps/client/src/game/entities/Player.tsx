@@ -62,14 +62,14 @@ export default function Player() {
       p.alive &&
       (input.consumePress("ShiftLeft") || input.consumePress("ShiftRight") || input.consumePress("Space")) &&
       p.state !== "dodge" &&
-      p.stamina >= PLAYER_BASE.dodgeStaminaCost
+      p.stamina >= PLAYER_BASE.dodgeStaminaCost * p.dodgeCostMult
     ) {
       p.state = "dodge";
       p.dodgeTimer = PLAYER_BASE.dodgeDuration;
       if (moveVec.lengthSq() > 0) p.dodgeDir.copy(moveVec);
       else p.dodgeDir.set(Math.sin(p.facing), 0, Math.cos(p.facing));
       p.facing = Math.atan2(p.dodgeDir.x, p.dodgeDir.z);
-      p.stamina -= PLAYER_BASE.dodgeStaminaCost;
+      p.stamina -= PLAYER_BASE.dodgeStaminaCost * p.dodgeCostMult;
       sfx.dodge();
       input.clearPresses();
     }
@@ -81,6 +81,7 @@ export default function Player() {
       if (p.dodgeTimer <= 0) {
         p.state = "idle";
         p.invulnerable = false;
+        world.lastDodgeEnd = world.time;
       }
     } else {
       tmpVec.copy(moveVec).multiplyScalar(PLAYER_BASE.speed * p.speedBonus * (p.alive ? 1 : 0));
@@ -102,7 +103,7 @@ export default function Player() {
     }
 
     p.stamina = Math.min(PLAYER_BASE.maxStamina, p.stamina + PLAYER_BASE.staminaRegen * dt);
-    p.mana = Math.min(PLAYER_BASE.maxMana, p.mana + PLAYER_BASE.manaRegen * dt);
+    p.mana = Math.min(PLAYER_BASE.maxMana, p.mana + PLAYER_BASE.manaRegen * p.manaRegenMult * dt);
 
     const g = group.current;
     const b = body.current;

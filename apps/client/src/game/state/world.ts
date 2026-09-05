@@ -25,6 +25,7 @@ export type Combatant = {
   id: number;
   kind: "dummy" | "enemy";
   defId: string | null;
+  elite: boolean;
   pos: THREE.Vector3;
   vel: THREE.Vector3;
   hp: number;
@@ -62,6 +63,7 @@ export type Turret = { id: number; pos: THREE.Vector3; life: number; shotT: numb
 export type Trap = { id: number; pos: THREE.Vector3; life: number };
 export type Slash = { pos: THREE.Vector3; facing: number; t: number; color: string; radius: number };
 export type Blast = { pos: THREE.Vector3; t: number; color: string; radius: number };
+export type Beam = { pos: THREE.Vector3; facing: number; len: number; t: number; color: string };
 export type Particle = {
   alive: boolean;
   pos: THREE.Vector3;
@@ -95,8 +97,15 @@ export const world = {
   time: 0,
   timeScale: 1,
   hitstopT: 0,
+  cineT: 0,
+  zoomPunch: 0,
   shake: 0,
   hurtT: -10,
+  comboN: 0,
+  comboT: 0,
+  pendingBoon: false,
+  lastDodgeEnd: -10,
+  lastDashFloat: -10,
   hubBounds: 38,
   nextId: 1,
   player: {
@@ -118,13 +127,21 @@ export const world = {
     shield: 0,
     shieldT: 0,
     hasteT: 0,
-    cd: { basic: 0, s1: 0, s2: 0 },
+    cd: { basic: 0, s1: 0, s2: 0, sp: 0 },
     alive: true,
     deathT: 0,
-    slotDmg: { basic: 1, s1: 1, s2: 1 },
+    slotDmg: { basic: 1, s1: 1, s2: 1, sp: 1 },
     cdMult: 1,
     shieldMult: 1,
     hasteBonus: 0,
+    boons: [] as string[],
+    boonDmg: 0,
+    boonSpeed: 0,
+    boonCdr: 1,
+    lifesteal: 0,
+    dodgeCostMult: 1,
+    manaRegenMult: 1,
+    boonPassive: { attack: 0, magic: 0, defense: 0, speed: 0, crit: 0, maxHealth: 0, maxMana: 0 },
     passive: { attack: 0, magic: 0, defense: 0, speed: 0, crit: 0, maxHealth: 0, maxMana: 0 },
   },
   combatants: [] as Combatant[],
@@ -149,6 +166,7 @@ export const world = {
   traps: [] as Trap[],
   slashes: makePool(8, () => ({ pos: new THREE.Vector3(), facing: 0, t: 0, color: "#fff", radius: 2 })),
   blasts: makePool(8, () => ({ pos: new THREE.Vector3(), t: 0, color: "#fff", radius: 3 })),
+  beams: makePool(4, () => ({ pos: new THREE.Vector3(), facing: 0, len: 10, t: 0, color: "#fff" })),
   particles: makePool(280, () => ({
     alive: false,
     pos: new THREE.Vector3(),
@@ -192,11 +210,27 @@ export function resetWorld() {
   pl.hasteT = 0;
   pl.alive = true;
   pl.deathT = 0;
-  pl.slotDmg = { basic: 1, s1: 1, s2: 1 };
+  pl.slotDmg = { basic: 1, s1: 1, s2: 1, sp: 1 };
+  pl.cd = { basic: 0, s1: 0, s2: 0, sp: 0 };
   pl.cdMult = 1;
   pl.shieldMult = 1;
   pl.hasteBonus = 0;
   pl.passive = { attack: 0, magic: 0, defense: 0, speed: 0, crit: 0, maxHealth: 0, maxMana: 0 };
+  pl.boons = [];
+  pl.boonDmg = 0;
+  pl.boonSpeed = 0;
+  pl.boonCdr = 1;
+  pl.lifesteal = 0;
+  pl.dodgeCostMult = 1;
+  pl.manaRegenMult = 1;
+  pl.boonPassive = { attack: 0, magic: 0, defense: 0, speed: 0, crit: 0, maxHealth: 0, maxMana: 0 };
+  world.comboN = 0;
+  world.comboT = 0;
+  world.cineT = 0;
+  world.zoomPunch = 0;
+  world.pendingBoon = false;
+  world.lastDodgeEnd = -10;
+  world.lastDashFloat = -10;
   pl.cd.basic = 0;
   pl.cd.s1 = 0;
   pl.cd.s2 = 0;

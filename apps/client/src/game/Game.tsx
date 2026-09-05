@@ -11,7 +11,7 @@ import Dummies from "./entities/Dummies";
 import Projectiles from "./entities/Projectiles";
 import Particles from "./entities/Particles";
 import FloatingTexts from "./entities/FloatingTexts";
-import { Slashes, Blasts } from "./entities/Fx";
+import { Slashes, Blasts, Beams } from "./entities/Fx";
 import { Turrets, Traps } from "./entities/Summons";
 import CombatSystem from "./systems/CombatSystem";
 import EnemySystem from "./systems/EnemySystem";
@@ -24,6 +24,7 @@ import Inventory from "../ui/Inventory";
 import SkillTree from "../ui/SkillTree";
 import Forge from "../ui/Forge";
 import PauseMenu from "../ui/PauseMenu";
+import BoonDraft from "../ui/BoonDraft";
 import Dialog from "../ui/Dialog";
 import Hud from "../ui/Hud";
 import { initInput } from "./input";
@@ -56,6 +57,7 @@ export default function Game() {
         const prog = useProgression.getState();
         const inv = useInventory.getState();
         const ui = useUi.getState();
+        if (prog.draftOpen) return;
         if (inv.forgeOpen) inv.setForgeOpen(false);
         else if (prog.treeOpen) prog.setTreeOpen(false);
         else if (inv.invOpen) inv.setInvOpen(false);
@@ -105,6 +107,7 @@ export default function Game() {
           <Particles />
           <Slashes />
           <Blasts />
+          <Beams />
           <Turrets />
           <Traps />
           <FloatingTexts />
@@ -127,6 +130,7 @@ export default function Game() {
       {treeOpen && <SkillTree />}
       {forgeOpen && <Forge />}
       {paused && <PauseMenu />}
+      <BoonDraft />
       <Dialog />
     </div>
   );
@@ -175,12 +179,18 @@ function DaylightRig() {
 function CameraRig() {
   const { camera } = useThree();
   const shakeOn = useSettings((s) => s.shake);
+  const ortho = camera as THREE.OrthographicCamera;
   useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
     const p = world.player.pos;
     tmpTarget.set(p.x, p.y + 0.8, p.z);
     camera.position.lerp(tmpTarget.clone().add(camOffset), 1 - Math.exp(-6 * dt));
     lookTarget.lerp(tmpTarget, 1 - Math.exp(-8 * dt));
+    const targetZoom = 42 - world.zoomPunch * 7;
+    if (Math.abs(ortho.zoom - targetZoom) > 0.01) {
+      ortho.zoom += (targetZoom - ortho.zoom) * (1 - Math.exp(-5 * dt));
+      ortho.updateProjectionMatrix();
+    }
     if (shakeOn && world.shake > 0.001) {
       const t = state.clock.elapsedTime * 60;
       const s = world.shake * 0.5;
@@ -199,7 +209,17 @@ function CameraRig() {
 }
 
 function classSkills(classId: ClassId) {
-  return SKILLS.filter((s) => s.classId === classId);
+  const list = SKILLS.filter((s) => s.classId === classId);
+  const by = (slot: "basic" | "s1" | "s2" | "sp") => list.find((s) => s.slot === slot);
+  return [by("basic"), by("s1"), by("s2"), by("sp")];
+}
+
+function comboMultUi(): number {
+  const n = world.comboN;
+  if (n >= 50) return 1.5;
+  if (n >= 25) return 1.25;
+  if (n >= 10) return 1.1;
+  return 1;
 }
 
 function HudSync() {
@@ -210,6 +230,7 @@ function HudSync() {
   const setDead = useHud((s) => s.setDead);
   const setBoss = useHud((s) => s.setBoss);
   const setHurt = useHud((s) => s.setHurt);
+  const setCombo = useHud((s) => s.setCombo);
   const classId = useUi((s) => s.classId);
   useFrame((_, dt) => {
     acc.current += dt;
@@ -240,11 +261,13 @@ function HudSync() {
       break;
     }
     if (!shown) setBoss(-1, "");
+    setCombo(world.comboN, comboMultUi());
     const skills = classSkills(classId);
     setCds(
       skills[0] ? p.cd.basic / Math.max(0.01, skills[0].cooldown) : 0,
       skills[1] ? p.cd.s1 / Math.max(0.01, skills[1].cooldown) : 0,
       skills[2] ? p.cd.s2 / Math.max(0.01, skills[2].cooldown) : 0,
+      skills[3] ? p.cd.sp / Math.max(0.01, skills[3].cooldown) : 0,
       p.shield > 0,
       p.hasteT > 0
     );

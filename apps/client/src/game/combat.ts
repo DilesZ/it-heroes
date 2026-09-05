@@ -4,7 +4,10 @@ import { world, type Combatant } from "./state/world";
 import { rollDrops } from "./loot";
 import { grantXp } from "../state/progressionStore";
 import { useQuests } from "../state/questStore";
+import { useHud } from "../state/hudStore";
 import { sfx } from "./audio";
+
+const BOSS_IDS = new Set(["bsod_lord", "worm_queen", "mainframe"]);
 
 const XP_BY_DEF: Record<string, number> = Object.fromEntries(ENEMIES.map((d) => [d.id, d.xp]));
 
@@ -99,12 +102,26 @@ export function spawnBlast(pos: THREE.Vector3, color: string, radius: number) {
   }
 }
 
+export function comboMult(): number {
+  const n = world.comboN;
+  if (n >= 50) return 1.5;
+  if (n >= 25) return 1.25;
+  if (n >= 10) return 1.1;
+  return 1;
+}
+
 export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean; color?: string; from?: THREE.Vector3; knock?: number }) {
   if (c.dead) return;
   const crit = opts?.crit ?? false;
-  const dmg = Math.max(1, Math.round(amount));
+  const p = world.player;
+  const dmg = Math.max(1, Math.round(amount * comboMult() * (1 + p.boonDmg)));
   c.hp -= dmg;
   c.hitFlash = 0.18;
+  world.comboN += 1;
+  world.comboT = 2.2;
+  if (world.comboN === 25 || world.comboN === 50 || world.comboN === 100) {
+    spawnFloat(c.pos, `COMBO x${world.comboN}`, "#fbbf24", true);
+  }
   spawnFloat(c.pos, crit ? `${dmg}!` : `${dmg}`, crit ? "#fbbf24" : opts?.color ?? "#ffffff", crit);
   spawnParticles(c.pos, opts?.color ?? c.emissive, crit ? 16 : 8, crit ? 8 : 5);
   sfx.hit(crit);
@@ -126,11 +143,21 @@ export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean
     spawnFloat(c.pos, "K.I.A.", "#f43f5e", true);
     world.shake = Math.max(world.shake, 0.45);
     sfx.explode();
+    const pl = world.player;
+    if (pl.lifesteal > 0 && pl.alive) {
+      const maxHp = useHud.getState().maxHp;
+      pl.health = Math.min(pl.health + maxHp * pl.lifesteal, maxHp);
+    }
     if (c.kind === "enemy") {
       rollDrops(c);
       const def = c.defId ? enemyXp(c.defId) : 0;
-      grantXp(def);
+      grantXp(def * (c.elite ? 3 : 1));
       if (c.defId) useQuests.getState().advanceKill(c.defId);
+      if (c.defId && BOSS_IDS.has(c.defId)) {
+        world.cineT = 1.1;
+        world.zoomPunch = 1;
+        world.pendingBoon = true;
+      }
     }
   }
 }
@@ -163,6 +190,18 @@ export function damagePlayer(amount: number, from?: THREE.Vector3) {
   void from;
 }
 
+export function spawnBeam(pos: THREE.Vector3, facing: number, len: number, color: string) {
+  for (const b of world.beams) {
+    if (b.t > 0) continue;
+    b.pos.copy(pos);
+    b.facing = facing;
+    b.len = len;
+    b.t = 1;
+    b.color = color;
+    return;
+  }
+}
+
 export function aliveCombatants(): Combatant[] {
   return world.combatants.filter((c) => !c.dead);
 }
@@ -179,6 +218,7 @@ export function ensureDummies() {
       id: world.nextId++,
       kind: "dummy",
       defId: null,
+      elite: false,
       pos: new THREE.Vector3(x, 0, z),
       vel: new THREE.Vector3(),
       hp: 120,

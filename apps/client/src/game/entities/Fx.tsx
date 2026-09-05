@@ -113,3 +113,66 @@ export function Blasts() {
     </group>
   );
 }
+
+function BeamFx({ index }: { index: number }) {
+  const group = useRef<THREE.Group>(null);
+  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const matHot = useRef<THREE.MeshBasicMaterial>(null);
+
+  useFrame(() => {
+    const b = world.beams[index];
+    const g = group.current;
+    if (!g) return;
+    g.visible = b.t > 0;
+    if (b.t <= 0) return;
+    g.position.set(
+      b.pos.x + Math.sin(b.facing) * b.len * 0.5,
+      1.0,
+      b.pos.z + Math.cos(b.facing) * b.len * 0.5
+    );
+    g.rotation.y = b.facing;
+    g.scale.set(1, 1, b.len);
+    if (mat.current) {
+      mat.current.opacity = b.t * 0.7;
+      mat.current.color.set(b.color);
+    }
+    if (matHot.current) matHot.current.opacity = b.t * b.t;
+  });
+
+  return (
+    <group ref={group} visible={false}>
+      <mesh>
+        <boxGeometry args={[1.6, 1.1, 1]} />
+        <meshBasicMaterial
+          ref={mat}
+          color="#ffffff"
+          transparent
+          opacity={0.7}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh>
+        <boxGeometry args={[0.55, 1.25, 1]} />
+        <meshBasicMaterial
+          ref={matHot}
+          color="#ffffff"
+          transparent
+          opacity={1}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+export function Beams() {
+  return (
+    <group>
+      {world.beams.map((_, i) => (
+        <BeamFx key={i} index={i} />
+      ))}
+    </group>
+  );
+}

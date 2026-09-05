@@ -91,9 +91,15 @@ function EnemyVisual({ c }: { c: Combatant }) {
         </mesh>
         <mesh ref={barFg} position={[0, 0, 0.001]}>
           <planeGeometry args={[0.9, 0.07]} />
-          <meshBasicMaterial color={c.emissive} toneMapped={false} />
+          <meshBasicMaterial color={c.elite ? "#e879f9" : c.emissive} toneMapped={false} />
         </mesh>
       </Billboard>
+      {c.elite && !c.dead && (
+        <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.75 * c.scale + 0.25, 0.75 * c.scale + 0.42, 28]} />
+          <meshBasicMaterial color="#e879f9" transparent opacity={0.75} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </mesh>
+      )}
       {c.aiState === "slamTel" && (
         <TelegraphRing color={c.emissive} radius={c.defId === "mainframe" ? 6.5 : c.defId === "worm_queen" ? 4.5 : 5.5} progress={1 - c.aiT / 1.0} />
       )}

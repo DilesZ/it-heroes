@@ -116,10 +116,10 @@ export function rollDrops(c: Combatant) {
     }
   }
 
-  const chance = isBoss ? 1 : 0.22;
+  const chance = isBoss ? 1 : c.elite ? 0.6 : 0.22;
   if (Math.random() > chance) return;
   const minIdx = isBoss ? RARITIES.indexOf("rare") : 0;
-  let rarity = rollRarity(isBoss ? 40 : 0);
+  let rarity = rollRarity(isBoss ? 40 : c.elite ? 30 : 0);
   if (RARITIES.indexOf(rarity) < minIdx) rarity = "rare";
   const cap = isBoss ? 99 : 8;
   const pool = ITEMS.filter((d) => d.rarity === rarity && d.level <= cap);
@@ -165,13 +165,13 @@ export function applyStats() {
     mp += stats.maxMana ?? 0;
   }
   const p = world.player;
-  p.attackBonus = atk + p.passive.attack;
-  p.magicBonus = mag + p.passive.magic;
-  p.defense = def + p.passive.defense;
-  p.speedBonus = 1 + (spd + p.passive.speed) / 100;
-  p.critBonus = (crit + p.passive.crit) / 100;
-  const maxHp = PLAYER_BASE.maxHealth + hp + p.passive.maxHealth;
-  const maxMp = PLAYER_BASE.maxMana + mp + p.passive.maxMana;
+  p.attackBonus = atk + p.passive.attack + p.boonPassive.attack;
+  p.magicBonus = mag + p.passive.magic + p.boonPassive.magic;
+  p.defense = def + p.passive.defense + p.boonPassive.defense;
+  p.speedBonus = 1 + (spd + p.passive.speed + p.boonSpeed + p.boonPassive.speed) / 100;
+  p.critBonus = (crit + p.passive.crit + p.boonPassive.crit) / 100;
+  const maxHp = PLAYER_BASE.maxHealth + hp + p.passive.maxHealth + p.boonPassive.maxHealth;
+  const maxMp = PLAYER_BASE.maxMana + mp + p.passive.maxMana + p.boonPassive.maxMana;
   useHud.getState().setMax(maxHp, maxMp);
   p.health = Math.min(p.health, maxHp);
   p.mana = Math.min(p.mana, maxMp);

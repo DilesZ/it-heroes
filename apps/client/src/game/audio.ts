@@ -162,6 +162,18 @@ export const sfx = {
     if (!gate("dodge", 150)) return;
     noise({ dur: 0.12, vol: 0.1, lowpass: 2000 });
   },
+  ult() {
+    tone({ freq: 80, freqEnd: 30, type: "sawtooth", dur: 0.8, vol: 0.4 });
+    noise({ dur: 0.7, vol: 0.3, lowpass: 900 });
+    tone({ freq: 660, type: "square", dur: 0.15, vol: 0.2 });
+    tone({ freq: 880, type: "square", dur: 0.15, vol: 0.2, delay: 0.12 });
+    tone({ freq: 1320, type: "square", dur: 0.3, vol: 0.22, delay: 0.24 });
+  },
+  boon() {
+    tone({ freq: 523, type: "triangle", dur: 0.15, vol: 0.2 });
+    tone({ freq: 784, type: "triangle", dur: 0.15, vol: 0.2, delay: 0.1 });
+    tone({ freq: 1046, type: "triangle", dur: 0.3, vol: 0.22, delay: 0.2 });
+  },
 };
 
 const ROOTS = [110, 87.31, 130.81, 98];

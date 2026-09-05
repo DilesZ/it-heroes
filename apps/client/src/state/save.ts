@@ -1,7 +1,8 @@
 import type { ClassId, EquipSlot, ItemInstance, Lang } from "@it-heroes/shared";
+import { world } from "../game/state/world";
 import { useUi } from "./uiStore";
 import { useInventory, type Materials } from "./inventoryStore";
-import { computeMods, useProgression } from "./progressionStore";
+import { computeMods, restoreBoons, useProgression } from "./progressionStore";
 import { useQuests } from "./questStore";
 
 const KEY = "it-heroes:save:v1";
@@ -14,6 +15,7 @@ type SaveData = {
   xp: number;
   skillPoints: number;
   ranks: Record<string, number>;
+  boons: string[];
   items: ItemInstance[];
   equipped: Record<EquipSlot, ItemInstance | null>;
   gold: number;
@@ -44,6 +46,7 @@ export function saveGame(): boolean {
       xp: prog.xp,
       skillPoints: prog.skillPoints,
       ranks: prog.ranks,
+      boons: [...world.player.boons],
       items: inv.items,
       equipped: inv.equipped,
       gold: inv.gold,
@@ -72,6 +75,8 @@ export function loadSave(): boolean {
       skillPoints: data.skillPoints,
       ranks: data.ranks,
       treeOpen: false,
+      draftOpen: false,
+      draftOptions: [],
     });
     useInventory.setState({
       items: data.items,
@@ -90,6 +95,7 @@ export function loadSave(): boolean {
       toasts: [],
       dialogNpc: null,
     });
+    restoreBoons(data.boons ?? []);
     computeMods();
     return true;
   } catch {

@@ -49,19 +49,21 @@ export function spawnBosses() {
 
 export function spawnEnemy(defId: string, x: number, z: number, hpMult = 1, dmgMult = 1): Combatant {
   const def = DEF_BY_ID[defId];
+  const elite = !def.isBoss && Math.random() < 0.08;
   const c: Combatant = {
     id: world.nextId++,
     kind: "enemy",
     defId,
+    elite,
     pos: new THREE.Vector3(x, 0, z),
     vel: new THREE.Vector3(),
-    hp: def.health * hpMult,
-    maxHp: def.health * hpMult,
+    hp: def.health * hpMult * (elite ? 3 : 1),
+    maxHp: def.health * hpMult * (elite ? 3 : 1),
     dead: false,
     deadT: 0,
     respawnT: -1,
     hitFlash: 0,
-    scale: def.scale * (def.isBoss ? 1 : 0.9 + Math.random() * 0.2),
+    scale: def.scale * (def.isBoss ? 1 : elite ? 1.35 : 0.9 + Math.random() * 0.2),
     color: def.color,
     emissive: def.emissive,
     bobPhase: Math.random() * Math.PI * 2,
@@ -202,14 +204,14 @@ function updateEnemy(c: Combatant, def: EnemyDef, dt: number) {
             pos: spawnAt,
             dir: tmpDir,
             speed: 13,
-            damage: def.damage,
+            damage: def.damage * (c.elite ? 1.5 : 1),
             color: def.emissive,
             life: 3,
             fromPlayer: false,
           });
           spawnParticles(spawnAt, def.emissive, 4, 2, 0.7);
         } else if (dist <= def.attackRange + 0.8 && p.alive) {
-          damagePlayer(def.damage, c.pos);
+          damagePlayer(def.damage * (c.elite ? 1.5 : 1), c.pos);
         }
         c.aiState = "cooldown";
         c.aiT = def.attackCooldown;

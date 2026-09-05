@@ -7,6 +7,7 @@ export type SkillType = "melee" | "projectile" | "aoe" | "buff" | "summon";
 export type SkillDef = {
   id: string;
   classId: ClassId;
+  slot: "basic" | "s1" | "s2" | "sp";
   nameKey: string;
   descKey: string;
   type: SkillType;
@@ -75,6 +76,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "keyboard_slash",
     classId: "helpdesk",
+    slot: "basic",
     nameKey: "skills.keyboard_slash.name",
     descKey: "skills.keyboard_slash.desc",
     type: "melee",
@@ -89,6 +91,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "reboot_slam",
     classId: "helpdesk",
+    slot: "s1",
     nameKey: "skills.reboot_slam.name",
     descKey: "skills.reboot_slam.desc",
     type: "aoe",
@@ -104,6 +107,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "sudo_shield",
     classId: "helpdesk",
+    slot: "s2",
     nameKey: "skills.sudo_shield.name",
     descKey: "skills.sudo_shield.desc",
     type: "buff",
@@ -118,6 +122,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "packet_bolt",
     classId: "devops",
+    slot: "basic",
     nameKey: "skills.packet_bolt.name",
     descKey: "skills.packet_bolt.desc",
     type: "projectile",
@@ -132,6 +137,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "script_nova",
     classId: "devops",
+    slot: "s1",
     nameKey: "skills.script_nova.name",
     descKey: "skills.script_nova.desc",
     type: "aoe",
@@ -147,6 +153,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "deploy_turret",
     classId: "devops",
+    slot: "s2",
     nameKey: "skills.deploy_turret.name",
     descKey: "skills.deploy_turret.desc",
     type: "summon",
@@ -161,6 +168,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "cable_shot",
     classId: "blueteam",
+    slot: "basic",
     nameKey: "skills.cable_shot.name",
     descKey: "skills.cable_shot.desc",
     type: "projectile",
@@ -175,6 +183,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "firewall_trap",
     classId: "blueteam",
+    slot: "s1",
     nameKey: "skills.firewall_trap.name",
     descKey: "skills.firewall_trap.desc",
     type: "aoe",
@@ -190,6 +199,7 @@ export const SKILLS: SkillDef[] = [
   {
     id: "patch_burst",
     classId: "blueteam",
+    slot: "s2",
     nameKey: "skills.patch_burst.name",
     descKey: "skills.patch_burst.desc",
     type: "buff",
@@ -200,6 +210,53 @@ export const SKILLS: SkillDef[] = [
     unlockLevel: 7,
     icon: "burst",
     color: "#6ee7b7",
+  },
+  {
+    id: "bluescreen",
+    classId: "helpdesk",
+    slot: "sp",
+    nameKey: "skills.bluescreen.name",
+    descKey: "skills.bluescreen.desc",
+    type: "aoe",
+    damage: 4.0,
+    manaCost: 30,
+    cooldown: 16,
+    range: 6,
+    radius: 6,
+    unlockLevel: 1,
+    icon: "nova",
+    color: "#38bdf8",
+  },
+  {
+    id: "rmrf",
+    classId: "devops",
+    slot: "sp",
+    nameKey: "skills.rmrf.name",
+    descKey: "skills.rmrf.desc",
+    type: "aoe",
+    damage: 1.1,
+    manaCost: 35,
+    cooldown: 18,
+    range: 14,
+    radius: 14,
+    unlockLevel: 1,
+    icon: "bolt",
+    color: "#c084fc",
+  },
+  {
+    id: "killswitch",
+    classId: "blueteam",
+    slot: "sp",
+    nameKey: "skills.killswitch.name",
+    descKey: "skills.killswitch.desc",
+    type: "projectile",
+    damage: 5.0,
+    manaCost: 30,
+    cooldown: 14,
+    range: 18,
+    unlockLevel: 1,
+    icon: "arrow",
+    color: "#34d399",
   },
 ];
 
