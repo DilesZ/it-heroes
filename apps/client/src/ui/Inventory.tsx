@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { SLOTS, type EquipSlot, type ItemInstance, type StatKey } from "@it-heroes/shared";
 import { useInventory, defOfItem } from "../state/inventoryStore";
 import { itemColor, itemName, itemStats } from "../game/loot";
+import { sfx } from "../game/audio";
 import { world } from "../game/state/world";
 
 const SLOT_GLYPH: Record<string, string> = {
@@ -81,14 +82,14 @@ function Detail({ item, equipped }: { item: ItemInstance; equipped: boolean }) {
       </div>
       {equipped ? (
         <button
-          onClick={() => unequip(def.slot)}
+          onClick={() => { unequip(def.slot); sfx.click(); }}
           className="btn-tech mt-3 w-full rounded px-3 py-1.5 text-xs font-bold tracking-widest text-slate-200"
         >
           {t("inv.unequip")}
         </button>
       ) : (
         <button
-          onClick={() => equip(item.uid)}
+          onClick={() => { equip(item.uid); sfx.click(); }}
           className="btn-tech mt-3 w-full rounded px-3 py-1.5 text-xs font-bold tracking-widest text-cyan-100"
         >
           {t("inv.equip")}
@@ -162,7 +163,7 @@ export default function Inventory() {
                 <p className="col-span-2 py-6 text-center text-sm text-slate-500">{t("inv.empty")}</p>
               )}
               {items.map((it) => (
-                <ItemCard key={it.uid} item={it} selected={it.uid === selectedUid} onClick={() => select(it.uid)} />
+                <ItemCard key={it.uid} item={it} selected={it.uid === selectedUid} onClick={() => { select(it.uid); sfx.click(); }} />
               ))}
             </div>
             {selected && <Detail item={selected} equipped={false} />}

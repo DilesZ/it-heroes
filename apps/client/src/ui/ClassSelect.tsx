@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useUi } from "../state/uiStore";
+import { unlockAudio, sfx } from "../game/audio";
 import { CLASSES, CLASS_IDS, type ClassId } from "@it-heroes/shared";
 
 export default function ClassSelect() {
   const { t } = useTranslation();
+  const startNewGame = useUi((s) => s.startNewGame);
   const setScreen = useUi((s) => s.setScreen);
   const classId = useUi((s) => s.classId);
   const setClass = useUi((s) => s.setClass);
@@ -36,7 +38,11 @@ export default function ClassSelect() {
         ))}
       </div>
       <button
-        onClick={() => setScreen("game")}
+        onClick={() => {
+          unlockAudio();
+          sfx.click();
+          startNewGame();
+        }}
         className="btn-tech relative z-10 rounded px-12 py-4 font-display text-xl font-black tracking-[0.25em] text-cyan-100"
       >
         {t("menu.start")}

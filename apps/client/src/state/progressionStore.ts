@@ -6,13 +6,16 @@ import { applyStats } from "../game/loot";
 import { useHud } from "./hudStore";
 import { useInventory } from "./inventoryStore";
 import { useQuests } from "./questStore";
+import { useUi } from "./uiStore";
+import { sfx } from "../game/audio";
 
 export function isPaused(): boolean {
   return (
     useInventory.getState().invOpen ||
     useInventory.getState().forgeOpen ||
     useProgression.getState().treeOpen ||
-    useQuests.getState().dialogNpc !== null
+    useQuests.getState().dialogNpc !== null ||
+    useUi.getState().paused
   );
 }
 
@@ -58,6 +61,7 @@ export const useProgression = create<ProgressionStore>((set, get) => ({
       spawnFloat(p.pos, "LEVEL UP", "#fbbf24", true);
       world.shake = Math.max(world.shake, 0.4);
       world.hitstopT = Math.max(world.hitstopT, 0.08);
+      sfx.levelup();
     }
   },
   spendPoint: (nodeId) => {

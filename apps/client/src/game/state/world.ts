@@ -96,6 +96,7 @@ export const world = {
   timeScale: 1,
   hitstopT: 0,
   shake: 0,
+  hurtT: -10,
   hubBounds: 38,
   nextId: 1,
   player: {

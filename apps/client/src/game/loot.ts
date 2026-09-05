@@ -18,6 +18,7 @@ import { spawnFloat, spawnParticles } from "./combat";
 import { useInventory } from "../state/inventoryStore";
 import { useHud } from "../state/hudStore";
 import { useQuests } from "../state/questStore";
+import { sfx } from "./audio";
 
 const DEF_BY_ID: Record<string, ItemDef> = Object.fromEntries(ITEMS.map((d) => [d.id, d]));
 
@@ -90,6 +91,7 @@ export function rollDrops(c: Combatant) {
   const gold = Math.round((3 + c.maxHp * 0.15) * (isBoss ? 5 : 1));
   useInventory.getState().addGold(gold);
   spawnFloat(c.pos, `+${gold} G`, "#fbbf24");
+  sfx.gold();
 
   if (!isBoss && Math.random() < 0.3) {
     const n = 1 + (Math.random() < 0.25 ? 1 : 0);
@@ -139,6 +141,7 @@ export function collectDrop(id: number) {
   useInventory.getState().addItem(drop.item);
   spawnFloat(drop.pos, itemName(drop.item), itemColor(drop.item));
   spawnParticles(drop.pos, itemColor(drop.item), 10, 4, 0.9);
+  sfx.pickup();
 }
 
 export function applyStats() {

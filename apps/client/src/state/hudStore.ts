@@ -16,11 +16,13 @@ interface HudStore {
   dead: boolean;
   bossFrac: number;
   bossNameKey: string;
+  hurt: boolean;
   setVitals: (hp: number, mana: number, stamina: number) => void;
   setMax: (maxHp: number, maxMana: number) => void;
   setCds: (basic: number, s1: number, s2: number, shield: boolean, haste: boolean) => void;
   setDead: (dead: boolean) => void;
   setBoss: (frac: number, nameKey: string) => void;
+  setHurt: (hurt: boolean) => void;
 }
 
 export const useHud = create<HudStore>((set) => ({
@@ -38,9 +40,11 @@ export const useHud = create<HudStore>((set) => ({
   dead: false,
   bossFrac: -1,
   bossNameKey: "",
+  hurt: false,
   setVitals: (hp, mana, stamina) => set({ hp, mana, stamina }),
   setMax: (maxHp, maxMana) => set({ maxHp, maxMana }),
   setCds: (cdBasic, cdS1, cdS2, shield, haste) => set({ cdBasic, cdS1, cdS2, shield, haste }),
   setDead: (dead) => set({ dead }),
   setBoss: (bossFrac, bossNameKey) => set({ bossFrac, bossNameKey }),
+  setHurt: (hurt: boolean) => set({ hurt }),
 }));

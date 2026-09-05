@@ -39,7 +39,7 @@ export default function Hud() {
   const { t } = useTranslation();
   const classId = useUi((s) => s.classId);
   const setScreen = useUi((s) => s.setScreen);
-  const { hp, maxHp, mana, maxMana, stamina, maxStamina, dead } = useHud();
+  const { hp, maxHp, mana, maxMana, stamina, maxStamina, dead, hurt } = useHud();
   const gold = useInventory((s) => s.gold);
   const bagCount = useInventory((s) => s.items.length);
   const setInvOpen = useInventory((s) => s.setInvOpen);
@@ -55,6 +55,13 @@ export default function Hud() {
       <BossBar />
       <QuestTracker />
       <Toasts />
+      <div
+        className="absolute inset-0 transition-opacity duration-200"
+        style={{
+          opacity: hurt ? 1 : 0,
+          background: "radial-gradient(ellipse at center, transparent 55%, rgba(190,18,60,0.45) 100%)",
+        }}
+      />
       {dead && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-950/40 backdrop-blur-[1px]">
           <h2 className="font-display text-4xl font-black tracking-[0.25em] text-red-300 drop-shadow-[0_0_20px_rgba(244,63,94,0.7)]">
@@ -86,7 +93,7 @@ export default function Hud() {
         <div className="flex items-center gap-2">
           <span className="w-10 text-right font-display text-[10px] font-bold tracking-widest text-amber-300">STA</span>
           <Bar value={stamina} max={maxStamina} color="linear-gradient(90deg,#f59e0b,#fbbf24)" glow="rgba(245,158,11,0.45)" />
-          <span className="w-16 text-[10px] text-slate-500">SHIFT · dodge ({PLAYER_BASE.dodgeStaminaCost})</span>
+          <span className="w-16 text-[10px] text-slate-500">{t("hud.dodge")} ({PLAYER_BASE.dodgeStaminaCost})</span>
         </div>
         </div>
       </div>

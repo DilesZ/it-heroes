@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { QUESTS, type QuestDef } from "@it-heroes/shared";
 import { useInventory } from "./inventoryStore";
 import { grantXp } from "./progressionStore";
+import { sfx } from "../game/audio";
 
 export type Toast = { id: number; textKey: string; param?: string };
 
@@ -97,6 +98,7 @@ export const useQuests = create<QuestStore>((set, get) => ({
     useInventory.getState().addGold(q.rewardGold);
     set({ done: [...s.done, id] });
     get().pushToast("quest.completed", id);
+    sfx.quest();
     if (q.next && QUEST_BY_ID[q.next]) get().start(q.next);
   },
   pushToast: (textKey, param) => {

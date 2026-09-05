@@ -11,6 +11,7 @@ import { computeMods, isPaused, useProgression } from "../../state/progressionSt
 import { useQuests } from "../../state/questStore";
 import { resetSpawning } from "./EnemySystem";
 import { initStarterKit } from "../loot";
+import { sfx } from "../audio";
 import {
   dealDamage,
   damagePlayer,
@@ -40,14 +41,19 @@ export default function CombatSystem() {
   const { camera, raycaster } = useThree();
 
   useEffect(() => {
+    const fresh = useUi.getState().freshStart;
     resetWorld();
     ensureDummies();
     resetSpawning();
-    useInventory.getState().reset();
-    useProgression.getState().reset();
-    useQuests.getState().reset();
-    initStarterKit();
-    computeMods();
+    if (fresh) {
+      useInventory.getState().reset();
+      useProgression.getState().reset();
+      useQuests.getState().reset();
+      initStarterKit();
+      computeMods();
+    } else {
+      computeMods();
+    }
   }, []);
 
   useFrame((_, raw) => {
@@ -132,6 +138,7 @@ function tryMeleeAttack(basic: SkillDef, attack: number, cd: { basic: number }) 
   p.mana -= basic.manaCost;
   cd.basic = basic.cooldown * (p.hasteT > 0 ? 0.55 : 1) * p.cdMult;
   spawnSlash(p.pos, p.facing, basic.color, basic.range);
+  sfx.melee();
   const dmg = basic.damage * attack * p.slotDmg.basic;
   const arc = 2.1;
   for (const c of aliveCombatants()) {
@@ -173,6 +180,7 @@ function tryProjectileAttack(basic: SkillDef, classId: ClassId, cd: { basic: num
     damage: basic.damage * stat * p.slotDmg.basic,
     color: basic.color,
   });
+  sfx.shoot();
   spawnParticles(spawnPos, basic.color, 3, 2, 0.7);
 }
 
@@ -189,6 +197,7 @@ function tryAoe(skill: SkillDef, classId: ClassId, cd: { basic: number; s1: numb
   spawnBlast(p.pos, skill.color, radius);
   spawnParticles(p.pos, skill.color, 30, 10, 1.3);
   world.shake = Math.max(world.shake, 0.5);
+  sfx.explode();
   const mult = p.slotDmg[slot];
   for (const c of aliveCombatants()) {
     toTarget.copy(c.pos).sub(p.pos).setY(0);
@@ -385,6 +394,7 @@ function updateTraps(dt: number, magic: number) {
     spawnBlast(trap.pos, "#10b981", 2.8);
     spawnParticles(trap.pos, "#10b981", 26, 9, 1.2);
     world.shake = Math.max(world.shake, 0.4);
+    sfx.explode();
     for (const c of aliveCombatants()) {
       if (toTarget.copy(c.pos).sub(trap.pos).setY(0).length() > 3) continue;
       const crit = rollCrit();

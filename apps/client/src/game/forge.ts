@@ -9,6 +9,7 @@ import { world } from "./state/world";
 import { spawnFloat, spawnParticles } from "./combat";
 import { useInventory } from "../state/inventoryStore";
 import { applyStats, genItem, itemName } from "./loot";
+import { sfx } from "./audio";
 
 export const MAX_UPGRADE = 5;
 
@@ -29,6 +30,7 @@ export function upgradeItem(uid: string): boolean {
   applyStats();
   spawnParticles(world.player.pos, "#fbbf24", 18, 6, 1.2);
   spawnFloat(world.player.pos, `+${item.upgrade} ${itemName(item)}`, "#fbbf24");
+  sfx.forge();
   return true;
 }
 
@@ -57,6 +59,7 @@ export function craftItem(slot: EquipSlot, rarity: Rarity): boolean {
   inv.addItem(item);
   spawnParticles(world.player.pos, "#c084fc", 22, 7, 1.3);
   spawnFloat(world.player.pos, itemName(item), "#c084fc", true);
+  sfx.forge();
   return true;
 }
 

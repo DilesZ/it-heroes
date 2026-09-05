@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { SKILL_NODES, type SkillNodeDef } from "@it-heroes/shared";
 import { useProgression } from "../state/progressionStore";
 import { useUi } from "../state/uiStore";
+import { sfx } from "../game/audio";
 
 const GLYPHS: Record<string, string> = {
   slash: "/",
@@ -23,7 +24,9 @@ function NodeCard({ node, rank, points, level }: { node: SkillNodeDef; rank: num
   const afford = points > 0 && !maxed && !locked;
   return (
     <button
-      onClick={() => spendPoint(node.id)}
+      onClick={() => {
+        if (spendPoint(node.id)) sfx.click();
+      }}
       disabled={!afford}
       className="relative flex items-center gap-2 rounded border bg-black/50 px-2 py-1.5 text-left transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:hover:translate-y-0"
       style={{

@@ -6,6 +6,7 @@ import { world, insideWorld } from "../state/world";
 import { input } from "../input";
 import { useUi } from "../../state/uiStore";
 import { isPaused } from "../../state/progressionStore";
+import { sfx } from "../audio";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const camFwd = new THREE.Vector3();
@@ -78,6 +79,7 @@ export default function Player() {
       else p.dodgeDir.set(Math.sin(p.facing), 0, Math.cos(p.facing));
       p.facing = Math.atan2(p.dodgeDir.x, p.dodgeDir.z);
       p.stamina -= PLAYER_BASE.dodgeStaminaCost;
+      sfx.dodge();
       input.clearPresses();
     }
 

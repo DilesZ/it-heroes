@@ -4,6 +4,7 @@ import { world, type Combatant } from "./state/world";
 import { rollDrops } from "./loot";
 import { grantXp } from "../state/progressionStore";
 import { useQuests } from "../state/questStore";
+import { sfx } from "./audio";
 
 const XP_BY_DEF: Record<string, number> = Object.fromEntries(ENEMIES.map((d) => [d.id, d.xp]));
 
@@ -106,6 +107,7 @@ export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean
   c.hitFlash = 0.18;
   spawnFloat(c.pos, crit ? `${dmg}!` : `${dmg}`, crit ? "#fbbf24" : opts?.color ?? "#ffffff", crit);
   spawnParticles(c.pos, opts?.color ?? c.emissive, crit ? 16 : 8, crit ? 8 : 5);
+  sfx.hit(crit);
   if (opts?.from && opts.knock) {
     const k = tmpV.copy(c.pos).sub(opts.from).setY(0).normalize().multiplyScalar(opts.knock);
     c.vel.add(k);
@@ -123,6 +125,7 @@ export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean
     spawnParticles(c.pos, c.emissive, 26, 9, 1.4);
     spawnFloat(c.pos, "K.I.A.", "#f43f5e", true);
     world.shake = Math.max(world.shake, 0.45);
+    sfx.explode();
     if (c.kind === "enemy") {
       rollDrops(c);
       const def = c.defId ? enemyXp(c.defId) : 0;
@@ -146,6 +149,8 @@ export function damagePlayer(amount: number, from?: THREE.Vector3) {
     p.health -= dmg;
     spawnFloat(p.pos, `-${dmg}`, "#f87171");
     spawnParticles(p.pos, "#f87171", 6, 4, 0.8);
+    world.hurtT = world.time;
+    sfx.hurt();
   }
   world.shake = Math.max(world.shake, 0.5);
   if (p.health <= 0) {

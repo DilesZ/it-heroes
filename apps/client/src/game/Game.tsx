@@ -22,6 +22,7 @@ import Npcs from "./entities/Npcs";
 import Inventory from "../ui/Inventory";
 import SkillTree from "../ui/SkillTree";
 import Forge from "../ui/Forge";
+import PauseMenu from "../ui/PauseMenu";
 import Dialog from "../ui/Dialog";
 import Hud from "../ui/Hud";
 import { initInput } from "./input";
@@ -30,6 +31,10 @@ import { useHud } from "../state/hudStore";
 import { useUi } from "../state/uiStore";
 import { useInventory } from "../state/inventoryStore";
 import { useProgression } from "../state/progressionStore";
+import { useQuests } from "../state/questStore";
+import { useSettings } from "../state/settingsStore";
+import { saveGame } from "../state/save";
+import { setCombatMusic } from "./audio";
 
 export default function Game() {
   const container = useRef<HTMLDivElement>(null);
@@ -37,6 +42,8 @@ export default function Game() {
   const invOpen = useInventory((s) => s.invOpen);
   const treeOpen = useProgression((s) => s.treeOpen);
   const forgeOpen = useInventory((s) => s.forgeOpen);
+  const paused = useUi((s) => s.paused);
+  const quality = useSettings((s) => s.quality);
 
   useEffect(() => {
     if (container.current) return initInput(container.current);
@@ -47,10 +54,12 @@ export default function Game() {
       if (e.code === "Escape") {
         const prog = useProgression.getState();
         const inv = useInventory.getState();
+        const ui = useUi.getState();
         if (inv.forgeOpen) inv.setForgeOpen(false);
         else if (prog.treeOpen) prog.setTreeOpen(false);
         else if (inv.invOpen) inv.setInvOpen(false);
-        else setScreen("menu");
+        else if (useQuests.getState().dialogNpc) return;
+        else ui.setPaused(!ui.paused);
       }
       if (e.code === "KeyI" || e.code === "Tab") {
         const inv = useInventory.getState();
@@ -68,11 +77,12 @@ export default function Game() {
   return (
     <div ref={container} className="relative h-full w-full">
       <Canvas
+        key={quality}
         orthographic
         camera={{ position: [18, 22, 18], zoom: 42, near: 0.1, far: 200 }}
-        shadows
-        dpr={[1, 2]}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        shadows={quality !== "low"}
+        dpr={quality === "high" ? [1, 2] : 1}
+        gl={{ antialias: quality !== "low", powerPreference: "high-performance" }}
       >
         <color attach="background" args={["#070b16"]} />
         <fog attach="fog" args={["#070b16", 30, 85]} />
@@ -97,21 +107,24 @@ export default function Game() {
           <Traps />
           <FloatingTexts />
           <HudSync />
-          <EffectComposer multisampling={4}>
-            <Bloom
-              intensity={0.9}
-              luminanceThreshold={0.35}
-              luminanceSmoothing={0.2}
-              mipmapBlur
-            />
-            <Vignette eskil={false} offset={0.18} darkness={0.75} />
-          </EffectComposer>
+          {quality !== "low" && (
+            <EffectComposer multisampling={quality === "high" ? 4 : 0}>
+              <Bloom
+                intensity={0.9}
+                luminanceThreshold={0.35}
+                luminanceSmoothing={0.2}
+                mipmapBlur
+              />
+              <Vignette eskil={false} offset={0.18} darkness={0.75} />
+            </EffectComposer>
+          )}
         </Suspense>
       </Canvas>
       <Hud />
       {invOpen && <Inventory />}
       {treeOpen && <SkillTree />}
       {forgeOpen && <Forge />}
+      {paused && <PauseMenu />}
       <Dialog />
     </div>
   );
@@ -124,13 +137,14 @@ const shakeVec = new THREE.Vector3();
 
 function CameraRig() {
   const { camera } = useThree();
+  const shakeOn = useSettings((s) => s.shake);
   useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
     const p = world.player.pos;
     tmpTarget.set(p.x, p.y + 0.8, p.z);
     camera.position.lerp(tmpTarget.clone().add(camOffset), 1 - Math.exp(-6 * dt));
     lookTarget.lerp(tmpTarget, 1 - Math.exp(-8 * dt));
-    if (world.shake > 0.001) {
+    if (shakeOn && world.shake > 0.001) {
       const t = state.clock.elapsedTime * 60;
       const s = world.shake * 0.5;
       shakeVec.set(
@@ -153,18 +167,28 @@ function classSkills(classId: ClassId) {
 
 function HudSync() {
   const acc = useRef(0);
+  const saveAcc = useRef(0);
   const setVitals = useHud((s) => s.setVitals);
   const setCds = useHud((s) => s.setCds);
   const setDead = useHud((s) => s.setDead);
   const setBoss = useHud((s) => s.setBoss);
+  const setHurt = useHud((s) => s.setHurt);
   const classId = useUi((s) => s.classId);
   useFrame((_, dt) => {
     acc.current += dt;
+    saveAcc.current += dt;
+    if (saveAcc.current > 30) {
+      saveAcc.current = 0;
+      saveGame();
+    }
     if (acc.current < 0.1) return;
     acc.current = 0;
     const p = world.player;
     setVitals(p.health, p.mana, p.stamina);
     setDead(!p.alive);
+    setHurt(world.time - world.hurtT < 0.35);
+    const inCombat = world.combatants.some((c) => c.kind === "enemy" && !c.dead);
+    setCombatMusic(inCombat);
     const bossDefs: Record<string, string> = {
       bsod_lord: "enemies.bsod_lord",
       worm_queen: "enemies.worm_queen",

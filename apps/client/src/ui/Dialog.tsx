@@ -7,6 +7,7 @@ import { useQuests,
   questDef,
 } from "../state/questStore";
 import { useInventory } from "../state/inventoryStore";
+import { sfx } from "../game/audio";
 import { NPCS } from "../game/entities/Npcs";
 
 const ENEMY_NAME: Record<string, string> = Object.fromEntries(ENEMIES.map((d) => [d.id, d.nameKey]));
@@ -131,10 +132,14 @@ function DialogQuest({ id, done }: { id: string; done?: boolean }) {
 
 function DialogButton({ label, onClick, primary }: { label: string; onClick: () => void; primary?: boolean }) {
   const setDialog = useQuests((s) => s.setDialog);
+  const click = () => {
+    sfx.click();
+    onClick();
+  };
   return (
     <div className="flex gap-2">
       <button
-        onClick={onClick}
+        onClick={click}
         className={`btn-tech flex-1 rounded px-4 py-2 font-display text-sm font-bold tracking-widest ${
           primary ? "text-cyan-100" : "text-slate-300"
         }`}

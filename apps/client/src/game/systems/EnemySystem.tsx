@@ -10,6 +10,7 @@ import {
   spawnProjectile,
   spawnBlast,
 } from "../combat";
+import { sfx } from "../audio";
 
 const toPlayer = new THREE.Vector3();
 const tmpDir = new THREE.Vector3();
@@ -255,6 +256,7 @@ function updateBoss(c: Combatant, def: EnemyDef, dt: number) {
         spawnFloat(c.pos, bossTitle(c.defId!), def.emissive, true);
         world.shake = 1;
         world.hitstopT = Math.max(world.hitstopT, 0.12);
+        sfx.roar();
       }
       break;
     case "chase": {
@@ -322,6 +324,7 @@ function updateBoss(c: Combatant, def: EnemyDef, dt: number) {
         spawnParticles(c.pos, def.emissive, 45, 12, 1.6);
         world.shake = 1;
         world.hitstopT = Math.max(world.hitstopT, 0.1);
+        sfx.explode();
         if (p.alive) {
           toPlayer.copy(p.pos).sub(c.pos).setY(0);
           if (toPlayer.length() < cfg.slamR + 0.3) damagePlayer(def.damage * cfg.slamMult, c.pos);
