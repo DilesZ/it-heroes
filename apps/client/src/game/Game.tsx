@@ -14,10 +14,13 @@ import { Turrets, Traps } from "./entities/Summons";
 import CombatSystem from "./systems/CombatSystem";
 import EnemySystem from "./systems/EnemySystem";
 import LootSystem from "./systems/LootSystem";
+import NpcSystem from "./systems/NpcSystem";
 import Enemies from "./entities/Enemies";
 import LootDrops from "./entities/LootDrops";
+import Npcs from "./entities/Npcs";
 import Inventory from "../ui/Inventory";
 import SkillTree from "../ui/SkillTree";
+import Dialog from "../ui/Dialog";
 import Hud from "../ui/Hud";
 import { initInput } from "./input";
 import { world } from "./state/world";
@@ -73,10 +76,12 @@ export default function Game() {
           <CombatSystem />
           <EnemySystem />
           <LootSystem />
+          <NpcSystem />
           <HubScene />
           <Player />
           <Dummies />
           <Enemies />
+          <Npcs />
           <LootDrops />
           <Projectiles />
           <Particles />
@@ -100,6 +105,7 @@ export default function Game() {
       <Hud />
       {invOpen && <Inventory />}
       {treeOpen && <SkillTree />}
+      <Dialog />
     </div>
   );
 }

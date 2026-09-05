@@ -3,6 +3,7 @@ import { ENEMIES } from "@it-heroes/shared";
 import { world, type Combatant } from "./state/world";
 import { rollDrops } from "./loot";
 import { grantXp } from "../state/progressionStore";
+import { useQuests } from "../state/questStore";
 
 const XP_BY_DEF: Record<string, number> = Object.fromEntries(ENEMIES.map((d) => [d.id, d.xp]));
 
@@ -126,6 +127,7 @@ export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean
       rollDrops(c);
       const def = c.defId ? enemyXp(c.defId) : 0;
       grantXp(def);
+      if (c.defId) useQuests.getState().advanceKill(c.defId);
     }
   }
 }

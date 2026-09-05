@@ -8,6 +8,7 @@ import { useUi } from "../../state/uiStore";
 import { useInventory } from "../../state/inventoryStore";
 import { useHud } from "../../state/hudStore";
 import { computeMods, isPaused, useProgression } from "../../state/progressionStore";
+import { useQuests } from "../../state/questStore";
 import { initStarterKit } from "../loot";
 import {
   dealDamage,
@@ -42,6 +43,7 @@ export default function CombatSystem() {
     ensureDummies();
     useInventory.getState().reset();
     useProgression.getState().reset();
+    useQuests.getState().reset();
     initStarterKit();
     computeMods();
   }, []);

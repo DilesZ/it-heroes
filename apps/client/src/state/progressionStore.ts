@@ -5,9 +5,14 @@ import { spawnBlast, spawnFloat, spawnParticles } from "../game/combat";
 import { applyStats } from "../game/loot";
 import { useHud } from "./hudStore";
 import { useInventory } from "./inventoryStore";
+import { useQuests } from "./questStore";
 
 export function isPaused(): boolean {
-  return useInventory.getState().invOpen || useProgression.getState().treeOpen;
+  return (
+    useInventory.getState().invOpen ||
+    useProgression.getState().treeOpen ||
+    useQuests.getState().dialogNpc !== null
+  );
 }
 
 export const MAX_LEVEL = 20;

@@ -3,6 +3,7 @@ import { useUi } from "../state/uiStore";
 import { useHud } from "../state/hudStore";
 import SkillBar from "./SkillBar";
 import BossBar from "./BossBar";
+import { QuestTracker, Toasts } from "./Dialog";
 import { useInventory } from "../state/inventoryStore";
 import { useProgression, MAX_LEVEL } from "../state/progressionStore";
 import { CLASSES, GAME_NAME, VERSION, PLAYER_BASE, XP_CURVE } from "@it-heroes/shared";
@@ -52,6 +53,8 @@ export default function Hud() {
     <div className="pointer-events-none absolute inset-0">
       <SkillBar />
       <BossBar />
+      <QuestTracker />
+      <Toasts />
       {dead && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-950/40 backdrop-blur-[1px]">
           <h2 className="font-display text-4xl font-black tracking-[0.25em] text-red-300 drop-shadow-[0_0_20px_rgba(244,63,94,0.7)]">

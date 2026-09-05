@@ -17,6 +17,7 @@ import { world, type Combatant } from "./state/world";
 import { spawnFloat, spawnParticles } from "./combat";
 import { useInventory } from "../state/inventoryStore";
 import { useHud } from "../state/hudStore";
+import { useQuests } from "../state/questStore";
 
 const DEF_BY_ID: Record<string, ItemDef> = Object.fromEntries(ITEMS.map((d) => [d.id, d]));
 
@@ -89,6 +90,12 @@ export function rollDrops(c: Combatant) {
   const gold = Math.round((3 + c.maxHp * 0.15) * (isBoss ? 5 : 1));
   useInventory.getState().addGold(gold);
   spawnFloat(c.pos, `+${gold} G`, "#fbbf24");
+
+  if (!isBoss && Math.random() < 0.3) {
+    const n = 1 + (Math.random() < 0.25 ? 1 : 0);
+    useQuests.getState().addScrap(n);
+    spawnFloat(c.pos, `+${n} ${i18next.t("items.scrap")}`, "#d6a35c");
+  }
 
   const chance = isBoss ? 1 : 0.22;
   if (Math.random() > chance) return;
