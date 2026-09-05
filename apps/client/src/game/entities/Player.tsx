@@ -1,5 +1,5 @@
-import { useMemo, useRef } from "react";
-import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { PLAYER_BASE, CLASSES } from "@it-heroes/shared";
 import { world, insideWorld } from "../state/world";
@@ -7,6 +7,8 @@ import { input } from "../input";
 import { useUi } from "../../state/uiStore";
 import { isPaused } from "../../state/progressionStore";
 import { sfx } from "../audio";
+import { Ball, Box, Caps, Eyes } from "../art/kit";
+import { BRIGHT } from "../art/palette";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const camFwd = new THREE.Vector3();
@@ -29,17 +31,6 @@ export default function Player() {
   const accent = CLASSES[classId].color;
 
   const walkT = useRef(0);
-
-  const mats = useMemo(
-    () => ({
-      suit: new THREE.MeshStandardMaterial({ color: "#1c2740", roughness: 0.55, metalness: 0.25 }),
-      dark: new THREE.MeshStandardMaterial({ color: "#0d1526", roughness: 0.5, metalness: 0.4 }),
-      accent: new THREE.MeshStandardMaterial({ color: accent, roughness: 0.4, metalness: 0.3 }),
-      visor: new THREE.MeshStandardMaterial({ color: "#04101c", emissive: accent, emissiveIntensity: 2.4, roughness: 0.2 }),
-      skin: new THREE.MeshStandardMaterial({ color: "#e8b98a", roughness: 0.7 }),
-    }),
-    [accent]
-  );
 
   useFrame((_, rawDt) => {
     if (isPaused()) return;
@@ -130,13 +121,13 @@ export default function Player() {
     if (p.state === "dodge") {
       const prog = 1 - p.dodgeTimer / PLAYER_BASE.dodgeDuration;
       b.rotation.x = prog * Math.PI * 2;
-      b.position.y = 0.55 - Math.sin(prog * Math.PI) * 0.18;
+      b.position.y = 0.42 - Math.sin(prog * Math.PI) * 0.15;
       b.scale.set(1, 1 - Math.sin(prog * Math.PI) * 0.15, 1);
     } else {
       b.rotation.x = THREE.MathUtils.lerp(b.rotation.x, 0, 1 - Math.exp(-14 * dt));
       b.position.y = THREE.MathUtils.lerp(
         b.position.y,
-        0.55 + Math.abs(Math.sin(walkT.current * 4.5)) * 0.05 * amp,
+        0.42 + Math.abs(Math.sin(walkT.current * 4.5)) * 0.05 * amp,
         1 - Math.exp(-20 * dt)
       );
       b.scale.set(1, 1, 1);
@@ -145,63 +136,55 @@ export default function Player() {
 
   return (
     <group ref={group} position={[world.player.pos.x, 0, world.player.pos.z]}>
-      <group ref={body} position={[0, 0.55, 0]}>
-        <mesh castShadow position={[0, 0.32, 0]} material={mats.suit}>
-          <capsuleGeometry args={[0.21, 0.32, 6, 14]} />
-        </mesh>
-        <mesh castShadow position={[0, 0.38, 0.16]} material={mats.accent}>
-          <boxGeometry args={[0.22, 0.3, 0.06]} />
-        </mesh>
-        <mesh castShadow position={[0, 0.45, -0.17]} material={mats.dark}>
-          <boxGeometry args={[0.34, 0.4, 0.14]} />
-        </mesh>
-        <mesh position={[0, 0.45, -0.245]} material={mats.visor}>
-          <planeGeometry args={[0.2, 0.06]} />
-        </mesh>
+      <group ref={body} position={[0, 0.42, 0]}>
+        <Caps p={[0, 0.28, 0]} r={0.21} len={0.18} color={accent} />
+        <Box p={[0, 0.3, 0.19]} s={[0.2, 0.24, 0.06]} color="#f6f9ff" radius={0.02} />
+        <Box p={[0, 0.32, -0.2]} s={[0.3, 0.34, 0.12]} color="#3b4763" radius={0.04} />
+        <Box p={[0, 0.32, -0.27]} s={[0.18, 0.05, 0.03]} color={accent} emissive={accent} ei={1.6} outline={false} />
 
-        <group ref={armL} position={[-0.27, 0.48, 0]}>
-          <mesh castShadow position={[0, -0.14, 0]} material={mats.suit}>
-            <capsuleGeometry args={[0.06, 0.22, 4, 10]} />
-          </mesh>
+        <group ref={armL} position={[-0.28, 0.4, 0]}>
+          <Caps p={[0, -0.12, 0]} r={0.07} len={0.16} color={accent} />
+          <Ball p={[0, -0.26, 0]} r={0.075} color={BRIGHT.skin} />
         </group>
-        <group ref={armR} position={[0.27, 0.48, 0]}>
-          <mesh castShadow position={[0, -0.14, 0]} material={mats.suit}>
-            <capsuleGeometry args={[0.06, 0.22, 4, 10]} />
-          </mesh>
+        <group ref={armR} position={[0.28, 0.4, 0]}>
+          <Caps p={[0, -0.12, 0]} r={0.07} len={0.16} color={accent} />
+          <Ball p={[0, -0.26, 0]} r={0.075} color={BRIGHT.skin} />
         </group>
 
         <group position={[0, 0.78, 0]}>
-          <mesh castShadow material={mats.skin}>
-            <sphereGeometry args={[0.14, 18, 14]} />
+          <Ball p={[0, 0, 0]} r={0.27} color={BRIGHT.skin} detail={2} />
+          <mesh position={[0, 0.1, 0]}>
+            <sphereGeometry args={[0.285, 14, 10, 0, Math.PI * 2, 0, 1.25]} />
+            <meshStandardMaterial color="#4a3b2c" roughness={0.9} flatShading />
           </mesh>
-          <mesh castShadow position={[0, 0.03, 0]} material={mats.dark}>
-            <sphereGeometry args={[0.155, 18, 14]} />
+          <Eyes p={[0, 0.0, 0.235]} s={1} />
+          <mesh position={[-0.22, 0.02, 0.12]} rotation={[0, 0.5, 0]}>
+            <torusGeometry args={[0.14, 0.035, 8, 16]} />
+            <meshStandardMaterial color={BRIGHT.dark} roughness={0.5} />
           </mesh>
-          <mesh position={[0, 0.02, 0.13]} rotation={[0.35, 0, 0]} material={mats.visor}>
-            <boxGeometry args={[0.2, 0.07, 0.05]} />
+          <mesh position={[0.22, 0.02, 0.12]} rotation={[0, -0.5, 0]}>
+            <torusGeometry args={[0.14, 0.035, 8, 16]} />
+            <meshStandardMaterial color={BRIGHT.dark} roughness={0.5} />
           </mesh>
+          <mesh position={[0.3, -0.12, 0.1]} rotation={[0.4, 0, -0.35]}>
+            <cylinderGeometry args={[0.02, 0.02, 0.22, 6]} />
+            <meshStandardMaterial color={BRIGHT.dark} roughness={0.5} />
+          </mesh>
+          <Ball p={[0.24, -0.2, 0.16]} r={0.045} color={accent} emissive={accent} ei={2} outline={false} />
         </group>
 
-        <group ref={legL} position={[-0.11, 0.08, 0]}>
-          <mesh castShadow position={[0, -0.16, 0]} material={mats.dark}>
-            <capsuleGeometry args={[0.075, 0.2, 4, 10]} />
-          </mesh>
-          <mesh castShadow position={[0, -0.3, 0.04]} material={mats.accent}>
-            <boxGeometry args={[0.12, 0.08, 0.2]} />
-          </mesh>
+        <group ref={legL} position={[-0.12, 0.1, 0]}>
+          <Caps p={[0, -0.1, 0]} r={0.085} len={0.1} color="#3b4763" />
+          <Box p={[0, -0.22, 0.05]} s={[0.15, 0.1, 0.24]} color={accent} radius={0.04} />
         </group>
-        <group ref={legR} position={[0.11, 0.08, 0]}>
-          <mesh castShadow position={[0, -0.16, 0]} material={mats.dark}>
-            <capsuleGeometry args={[0.075, 0.2, 4, 10]} />
-          </mesh>
-          <mesh castShadow position={[0, -0.3, 0.04]} material={mats.accent}>
-            <boxGeometry args={[0.12, 0.08, 0.2]} />
-          </mesh>
+        <group ref={legR} position={[0.12, 0.1, 0]}>
+          <Caps p={[0, -0.1, 0]} r={0.085} len={0.1} color="#3b4763" />
+          <Box p={[0, -0.22, 0.05]} s={[0.15, 0.1, 0.24]} color={accent} radius={0.04} />
         </group>
       </group>
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.5, 24]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.12} />
+        <circleGeometry args={[0.55, 24]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.22} />
       </mesh>
     </group>
   );

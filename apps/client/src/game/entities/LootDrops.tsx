@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { Ball, Box } from "../art/kit";
 import { world } from "../state/world";
 import { itemColor } from "../loot";
 
 function DropVisual({ id }: { id: number }) {
   const group = useRef<THREE.Group>(null);
-  const chip = useRef<THREE.Mesh>(null);
+  const chip = useRef<THREE.Group>(null);
   const beamMat = useRef<THREE.MeshBasicMaterial>(null);
 
   useFrame(() => {
@@ -31,10 +32,10 @@ function DropVisual({ id }: { id: number }) {
 
   return (
     <group ref={group}>
-      <mesh ref={chip} position={[0, 0.45, 0]}>
-        <boxGeometry args={[0.34, 0.22, 0.34]} />
-        <meshStandardMaterial color="#0b1220" emissive={color} emissiveIntensity={1.8} roughness={0.3} metalness={0.6} />
-      </mesh>
+      <group ref={chip}>
+        <Box p={[0, 0.45, 0]} s={[0.4, 0.26, 0.4]} color="#f4f8ff" radius={0.08} />
+        <Ball p={[0, 0.62, 0]} r={0.1} color={color} emissive={color} ei={1.8} outline={false} />
+      </group>
       <mesh position={[0, 1.2, 0]}>
         <cylinderGeometry args={[0.14, 0.3, 2.1, 8, 1, true]} />
         <meshBasicMaterial

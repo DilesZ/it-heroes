@@ -32,7 +32,7 @@ export default function Particles() {
 
   return (
     <instancedMesh ref={mesh} args={[undefined, undefined, MAX]} frustumCulled={false}>
-      <boxGeometry args={[1, 1, 1]} />
+      <sphereGeometry args={[1, 8, 6]} />
       <meshBasicMaterial toneMapped={false} />
     </instancedMesh>
   );

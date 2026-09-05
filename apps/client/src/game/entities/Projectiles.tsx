@@ -24,12 +24,12 @@ function Bolt({ index }: { index: number }) {
   return (
     <group ref={group} visible={false}>
       <mesh>
-        <sphereGeometry args={[0.13, 10, 8]} />
-        <meshStandardMaterial ref={core} color="#000000" emissive="#ffffff" emissiveIntensity={3.2} />
+        <sphereGeometry args={[0.15, 12, 10]} />
+        <meshStandardMaterial ref={core} color="#ffffff" emissive="#ffffff" emissiveIntensity={2.6} roughness={0.3} />
       </mesh>
-      <mesh scale={[1, 1, 3.2]}>
-        <sphereGeometry args={[0.13, 10, 8]} />
-        <meshBasicMaterial ref={glow} color="#ffffff" transparent opacity={0.35} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <mesh scale={[1.5, 1.5, 3.4]}>
+        <sphereGeometry args={[0.15, 12, 10]} />
+        <meshBasicMaterial ref={glow} color="#ffffff" transparent opacity={0.4} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
     </group>
   );

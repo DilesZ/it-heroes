@@ -1,19 +1,14 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { Ball, Box, Caps, Cyl, Eyes } from "../art/kit";
+import { BRIGHT } from "../art/palette";
 import { world, type Combatant } from "../state/world";
 import { ensureDummies } from "../combat";
 
 function DummyVisual({ c }: { c: Combatant }) {
   const group = useRef<THREE.Group>(null);
   const core = useRef<THREE.MeshStandardMaterial>(null);
-  const mats = useMemo(
-    () => ({
-      body: new THREE.MeshStandardMaterial({ color: c.color, roughness: 0.5, metalness: 0.5 }),
-      dark: new THREE.MeshStandardMaterial({ color: "#0b1220", roughness: 0.5, metalness: 0.6 }),
-    }),
-    [c.color]
-  );
 
   useFrame(() => {
     const g = group.current;
@@ -23,38 +18,26 @@ function DummyVisual({ c }: { c: Combatant }) {
     g.scale.setScalar(showScale * c.scale);
     g.position.y = c.dead ? 0 : Math.sin(world.time * 2 + c.bobPhase) * 0.05;
     if (core.current) {
-      core.current.emissiveIntensity = c.dead ? 0 : 1.6 + c.hitFlash * 25;
+      core.current.emissiveIntensity = c.dead ? 0 : 1.1 + c.hitFlash * 14;
     }
   });
 
   return (
     <group ref={group} position={[c.pos.x, 0, c.pos.z]}>
-      <mesh castShadow position={[0, 0.75, 0]} material={mats.body}>
-        <cylinderGeometry args={[0.42, 0.5, 1.1, 8]} />
+      <Cyl p={[0, 0.18, 0]} rt={0.4} rb={0.48} h={0.36} color="#8a94ad" />
+      <Ball p={[0, 0.85, 0]} r={0.5} color="#f4b942" detail={1} />
+      <mesh position={[0, 0.85, 0]}>
+        <cylinderGeometry args={[0.51, 0.51, 0.2, 12]} />
+        <meshStandardMaterial ref={core} color="#7a4a12" emissive={c.emissive} emissiveIntensity={1.1} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 0.75, 0]} material={mats.dark}>
-        <cylinderGeometry args={[0.44, 0.44, 0.16, 8]} />
-      </mesh>
-      <mesh position={[0, 0.75, 0]}>
-        <cylinderGeometry args={[0.445, 0.445, 0.1, 8]} />
-        <meshStandardMaterial ref={core} color="#1a0b02" emissive={c.emissive} emissiveIntensity={1.6} />
-      </mesh>
-      <mesh castShadow position={[0, 1.55, 0]} material={mats.dark}>
-        <sphereGeometry args={[0.26, 14, 12]} />
-      </mesh>
-      <mesh position={[0, 1.58, 0.2]}>
-        <boxGeometry args={[0.3, 0.09, 0.08]} />
-        <meshStandardMaterial color="#1a0b02" emissive={c.emissive} emissiveIntensity={1.4} />
-      </mesh>
-      <mesh castShadow position={[-0.55, 0.8, 0]} material={mats.dark}>
-        <boxGeometry args={[0.14, 0.7, 0.14]} />
-      </mesh>
-      <mesh castShadow position={[0.55, 0.8, 0]} material={mats.dark}>
-        <boxGeometry args={[0.14, 0.7, 0.14]} />
-      </mesh>
+      <Ball p={[0, 1.32, 0]} r={0.3} color={BRIGHT.white} detail={2} />
+      <Eyes p={[0, 1.34, 0.24]} s={0.95} angry />
+      <Caps p={[-0.55, 0.6, 0]} r={0.09} len={0.3} color="#8a94ad" />
+      <Caps p={[0.55, 0.6, 0]} r={0.09} len={0.3} color="#8a94ad" />
+      <Box p={[0, 0.62, 0.52]} s={[0.34, 0.22, 0.1]} color={BRIGHT.dark} radius={0.04} />
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.55, 0.68, 24]} />
-        <meshBasicMaterial color={c.emissive} transparent opacity={0.3} />
+        <ringGeometry args={[0.6, 0.74, 24]} />
+        <meshBasicMaterial color={c.emissive} transparent opacity={0.45} />
       </mesh>
     </group>
   );

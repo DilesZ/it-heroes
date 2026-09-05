@@ -3,6 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { useTranslation } from "react-i18next";
 import * as THREE from "three";
+import { Ball, Box, Caps, Cyl, Eyes } from "../art/kit";
+import { BRIGHT } from "../art/palette";
 import { world } from "../state/world";
 import { useQuests, activeMainQuest, isTurnable, questDef } from "../../state/questStore";
 
@@ -94,29 +96,21 @@ function TechNpc({ color }: { color: string }) {
   });
   return (
     <group ref={g}>
-      <mesh castShadow position={[0, 0.55, 0]}>
-        <capsuleGeometry args={[0.24, 0.5, 6, 12]} />
-        <meshStandardMaterial color="#232f4a" roughness={0.55} metalness={0.25} />
+      <Caps p={[0, 0.3, 0]} r={0.2} len={0.16} color="#e8eefc" />
+      <Box p={[0, 0.32, 0.18]} s={[0.18, 0.2, 0.05]} color={color} radius={0.02} />
+      <Caps p={[-0.26, 0.32, 0]} r={0.06} len={0.14} color="#dbe4f7" />
+      <Caps p={[0.26, 0.32, 0]} r={0.06} len={0.14} color="#dbe4f7" />
+      <Ball p={[0, 0.92, 0]} r={0.26} color={BRIGHT.skin} detail={2} />
+      <Eyes p={[0, 0.92, 0.225]} s={0.95} />
+      <mesh position={[0, 1.1, 0]}>
+        <sphereGeometry args={[0.275, 14, 10, 0, Math.PI * 2, 0, 1.1]} />
+        <meshStandardMaterial color={color} roughness={0.8} flatShading />
       </mesh>
-      <mesh position={[0, 0.72, 0.2]}>
-        <boxGeometry args={[0.24, 0.3, 0.05]} />
-        <meshStandardMaterial color="#0b1220" emissive={color} emissiveIntensity={1.6} />
-      </mesh>
-      <mesh castShadow position={[0, 1.15, 0]}>
-        <sphereGeometry args={[0.17, 14, 12]} />
-        <meshStandardMaterial color="#d9a06b" roughness={0.7} />
-      </mesh>
-      <mesh position={[0, 1.17, 0.14]}>
-        <boxGeometry args={[0.24, 0.08, 0.05]} />
-        <meshStandardMaterial color="#04101c" emissive={color} emissiveIntensity={2} />
-      </mesh>
-      <mesh castShadow position={[-0.32, 0.6, 0]}>
-        <capsuleGeometry args={[0.07, 0.4, 4, 8]} />
-        <meshStandardMaterial color="#1a2340" roughness={0.6} />
-      </mesh>
-      <mesh castShadow position={[0.32, 0.6, 0]}>
-        <capsuleGeometry args={[0.07, 0.4, 4, 8]} />
-        <meshStandardMaterial color="#1a2340" roughness={0.6} />
+      <Caps p={[-0.11, 0.08, 0]} r={0.08} len={0.08} color="#3b4763" />
+      <Caps p={[0.11, 0.08, 0]} r={0.08} len={0.08} color="#3b4763" />
+      <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.45, 20]} />
+        <meshBasicMaterial color={color} transparent opacity={0.25} />
       </mesh>
     </group>
   );
@@ -131,21 +125,14 @@ function BotNpc({ color }: { color: string }) {
   });
   return (
     <group ref={g}>
-      <mesh castShadow position={[0, 0.35, 0]}>
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
-        <meshStandardMaterial color="#2b3648" roughness={0.4} metalness={0.7} />
-      </mesh>
-      <mesh position={[0, 0.38, 0.26]}>
-        <planeGeometry args={[0.3, 0.14]} />
-        <meshStandardMaterial color="#04101c" emissive={color} emissiveIntensity={2} />
-      </mesh>
-      <mesh position={[0, 0.72, 0]}>
-        <cylinderGeometry args={[0.03, 0.03, 0.35, 6]} />
-        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.3} />
-      </mesh>
-      <mesh position={[0, 0.92, 0]}>
-        <sphereGeometry args={[0.06, 8, 6]} />
-        <meshStandardMaterial color="#000" emissive="#f43f5e" emissiveIntensity={2.5} />
+      <Ball p={[0, 0.42, 0]} r={0.32} color="#e8eefc" detail={2} />
+      <Eyes p={[0, 0.46, 0.26]} s={0.9} />
+      <Cyl p={[0, 0.78, 0]} rt={0.03} rb={0.03} h={0.3} color="#8a94ad" outline={false} />
+      <Ball p={[0, 0.95, 0]} r={0.06} color="#f43f5e" emissive="#f43f5e" ei={2} outline={false} />
+      <Cyl p={[0, 0.1, 0]} rt={0.2} rb={0.26} h={0.14} color="#8a94ad" />
+      <mesh position={[0, 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[0.4, 20]} />
+        <meshBasicMaterial color={color} transparent opacity={0.2} />
       </mesh>
     </group>
   );

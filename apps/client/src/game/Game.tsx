@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+import { Cloud, Environment, Lightformer, Sky } from "@react-three/drei";
 import * as THREE from "three";
 import { SKILLS, type ClassId } from "@it-heroes/shared";
 import HubScene from "./world/HubScene";
@@ -84,9 +85,10 @@ export default function Game() {
         dpr={quality === "high" ? [1, 2] : 1}
         gl={{ antialias: quality !== "low", powerPreference: "high-performance" }}
       >
-        <color attach="background" args={["#070b16"]} />
-        <fog attach="fog" args={["#070b16", 30, 85]} />
+        <color attach="background" args={["#8ec9f5"]} />
+        <fog attach="fog" args={["#a9c6e8", 34, 95]} />
         <Suspense fallback={null}>
+          <DaylightRig />
           <CameraRig />
           <CombatSystem />
           <EnemySystem />
@@ -110,12 +112,12 @@ export default function Game() {
           {quality !== "low" && (
             <EffectComposer multisampling={quality === "high" ? 4 : 0}>
               <Bloom
-                intensity={0.9}
-                luminanceThreshold={0.35}
-                luminanceSmoothing={0.2}
+                intensity={0.45}
+                luminanceThreshold={0.62}
+                luminanceSmoothing={0.25}
                 mipmapBlur
               />
-              <Vignette eskil={false} offset={0.18} darkness={0.75} />
+              <Vignette eskil={false} offset={0.28} darkness={0.42} />
             </EffectComposer>
           )}
         </Suspense>
@@ -134,6 +136,41 @@ const camOffset = new THREE.Vector3(18, 22, 18);
 const lookTarget = new THREE.Vector3();
 const tmpTarget = new THREE.Vector3();
 const shakeVec = new THREE.Vector3();
+
+function DaylightRig() {
+  const { gl } = useThree();
+  useEffect(() => {
+    gl.toneMappingExposure = 1.12;
+    gl.shadowMap.type = THREE.PCFSoftShadowMap;
+  }, [gl]);
+  return (
+    <group>
+      <hemisphereLight args={["#cfe8ff", "#8a7f70", 0.95]} />
+      <directionalLight
+        position={[16, 26, 10]}
+        intensity={2.1}
+        color="#fff1dc"
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-42}
+        shadow-camera-right={42}
+        shadow-camera-top={42}
+        shadow-camera-bottom={-42}
+        shadow-bias={-0.0003}
+        shadow-normalBias={0.4}
+      />
+      <directionalLight position={[-14, 10, -18]} intensity={0.5} color="#bcd6ff" />
+      <Sky distance={4000} sunPosition={[60, 42, 20]} turbidity={6} rayleigh={1.2} />
+      <Cloud position={[0, 26, -60]} speed={0.25} opacity={0.75} segments={14} bounds={[70, 6, 40]} color="#ffffff" />
+      <Cloud position={[-30, 30, -150]} speed={0.18} opacity={0.7} segments={12} bounds={[60, 5, 36]} color="#f2e9ff" />
+      <Environment resolution={64}>
+        <Lightformer intensity={1.6} position={[0, 8, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[12, 12, 1]} color="#e8f4ff" />
+        <Lightformer intensity={0.7} position={[-6, 3, -2]} rotation={[0, Math.PI / 2, 0]} scale={[10, 4, 1]} color="#cfe0ff" />
+        <Lightformer intensity={0.7} position={[6, 3, 2]} rotation={[0, -Math.PI / 2, 0]} scale={[10, 4, 1]} color="#ffe9d2" />
+      </Environment>
+    </group>
+  );
+}
 
 function CameraRig() {
   const { camera } = useThree();

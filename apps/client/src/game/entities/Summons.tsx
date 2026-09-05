@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { Ball, Box, Cyl, Eyes } from "../art/kit";
 import { world } from "../state/world";
 import { aliveCombatants } from "../combat";
 
@@ -55,20 +56,13 @@ function TurretVisual({ id }: { id: number }) {
 
   return (
     <group ref={group}>
-      <mesh castShadow position={[0, 0.35, 0]}>
-        <cylinderGeometry args={[0.16, 0.3, 0.7, 6]} />
-        <meshStandardMaterial color="#1e2433" roughness={0.4} metalness={0.7} />
-      </mesh>
+      <Cyl p={[0, 0.3, 0]} rt={0.2} rb={0.32} h={0.6} color="#dbe4f7" />
       <group ref={head} position={[0, 0.85, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[0.34, 0.24, 0.4]} />
-          <meshStandardMaterial color="#2a3350" roughness={0.4} metalness={0.6} />
-        </mesh>
-        <mesh position={[0, 0, 0.3]}>
-          <cylinderGeometry args={[0.05, 0.05, 0.4, 8]} />
-          <meshStandardMaterial color="#0a0a12" emissive="#a78bfa" emissiveIntensity={2.5} />
-        </mesh>
-        <pointLight color="#a78bfa" intensity={8} distance={7} />
+        <Ball p={[0, 0, 0]} r={0.26} color="#eef3fd" detail={2} />
+        <Eyes p={[0, 0.02, 0.2]} s={0.8} />
+        <Cyl p={[0, 0.02, 0.34]} rt={0.05} rb={0.05} h={0.36} color="#8a94ad" outline={false} />
+        <Ball p={[0, 0.02, 0.52]} r={0.06} color="#a78bfa" emissive="#a78bfa" ei={2.2} outline={false} />
+        <pointLight color="#a78bfa" intensity={5} distance={7} />
       </group>
     </group>
   );

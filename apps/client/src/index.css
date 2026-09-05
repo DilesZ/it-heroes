@@ -22,17 +22,24 @@ body {
 }
 
 .panel {
-  background: linear-gradient(160deg, rgba(11, 17, 34, 0.92), rgba(7, 11, 24, 0.95));
-  border: 1px solid rgba(34, 211, 238, 0.25);
+  background: linear-gradient(165deg, rgba(20, 30, 58, 0.94), rgba(10, 15, 34, 0.96));
+  border: 2px solid rgba(125, 211, 252, 0.35);
+  border-radius: 18px;
   box-shadow:
-    0 0 40px rgba(34, 211, 238, 0.08),
-    inset 0 0 24px rgba(34, 211, 238, 0.04);
+    0 8px 32px rgba(2, 6, 18, 0.55),
+    0 0 40px rgba(56, 189, 248, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 24px rgba(56, 189, 248, 0.05);
 }
 
 .btn-tech {
   position: relative;
-  border: 1px solid rgba(34, 211, 238, 0.4);
-  background: linear-gradient(160deg, rgba(14, 22, 44, 0.9), rgba(9, 14, 30, 0.95));
+  border: 2px solid rgba(125, 211, 252, 0.45);
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(30, 46, 88, 0.95), rgba(14, 22, 46, 0.97));
+  box-shadow:
+    0 4px 0 rgba(8, 15, 35, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease,
@@ -40,9 +47,19 @@ body {
 }
 
 .btn-tech:hover:not(:disabled) {
-  border-color: rgba(34, 211, 238, 0.9);
-  box-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
-  transform: translateY(-1px);
+  border-color: rgba(165, 243, 252, 0.95);
+  box-shadow:
+    0 4px 0 rgba(8, 15, 35, 0.9),
+    0 0 20px rgba(56, 189, 248, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-tech:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow:
+    0 1px 0 rgba(8, 15, 35, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .btn-tech:disabled {
