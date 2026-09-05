@@ -12,7 +12,7 @@ export const PLAYER_BASE = {
   dodgeDuration: 0.28,
   dodgeIFrames: 0.22,
   dodgeStaminaCost: 30,
-} as const;
+};
 
 export const XP_CURVE = (level: number): number =>
   Math.floor(80 * Math.pow(level, 1.5));
