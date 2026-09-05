@@ -6,6 +6,7 @@ import { world } from "../state/world";
 function SlashFx({ index }: { index: number }) {
   const group = useRef<THREE.Group>(null);
   const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const matHot = useRef<THREE.MeshBasicMaterial>(null);
 
   useFrame(() => {
     const s = world.slashes[index];
@@ -22,6 +23,7 @@ function SlashFx({ index }: { index: number }) {
       mat.current.opacity = s.t * 0.85;
       mat.current.color.set(s.color);
     }
+    if (matHot.current) matHot.current.opacity = s.t * s.t * 0.95;
   });
 
   return (
@@ -33,6 +35,18 @@ function SlashFx({ index }: { index: number }) {
           color="#ffffff"
           transparent
           opacity={0.8}
+          side={THREE.DoubleSide}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]} scale={0.62}>
+        <ringGeometry args={[0.55, 1, 16, 1, 0.25, 1.6]} />
+        <meshBasicMaterial
+          ref={matHot}
+          color="#ffffff"
+          transparent
+          opacity={0.9}
           side={THREE.DoubleSide}
           blending={THREE.AdditiveBlending}
           depthWrite={false}

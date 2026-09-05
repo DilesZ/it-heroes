@@ -7,7 +7,46 @@ import { BRIGHT } from "../art/palette";
 
 const ACCENTS = ["#22d3ee", "#a78bfa", "#34d399", "#f472b6", "#fbbf24"];
 
+function useCircuitTexture(): THREE.CanvasTexture {
+  return useMemo(() => {
+    const S = 1024;
+    const cv = document.createElement("canvas");
+    cv.width = S;
+    cv.height = S;
+    const ctx = cv.getContext("2d")!;
+    let seed = 7;
+    const rand = () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+    ctx.strokeStyle = "rgba(70,92,150,0.5)";
+    ctx.lineWidth = 5;
+    ctx.lineCap = "round";
+    for (let i = 0; i < 46; i++) {
+      let x = rand() * S;
+      let y = rand() * S;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      const segs = 2 + Math.floor(rand() * 3);
+      for (let sgm = 0; sgm < segs; sgm++) {
+        if (rand() > 0.5) x += (rand() - 0.5) * 320;
+        else y += (rand() - 0.5) * 320;
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, 9 + rand() * 8, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(70,92,150,0.5)";
+      ctx.fill();
+    }
+    const tex = new THREE.CanvasTexture(cv);
+    tex.anisotropy = 4;
+    return tex;
+  }, []);
+}
+
 function Plaza() {
+  const circuit = useCircuitTexture();
   const patches = useMemo(() => {
     const pts: { x: number; z: number; r: number; c: string }[] = [];
     let seed = 42;
@@ -39,6 +78,10 @@ function Plaza() {
           <meshBasicMaterial color={BRIGHT.hubRing} transparent opacity={0.55} />
         </mesh>
       ))}
+      <mesh position={[0, 0.003, 2]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[37, 48]} />
+        <meshBasicMaterial map={circuit} transparent opacity={0.5} depthWrite={false} />
+      </mesh>
       {patches.map((pt, i) => (
         <mesh key={i} position={[pt.x, 0.004, pt.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[pt.r, 20]} />

@@ -2,19 +2,8 @@ import { useTranslation } from "react-i18next";
 import { SKILL_NODES, type SkillNodeDef } from "@it-heroes/shared";
 import { useProgression } from "../state/progressionStore";
 import { useUi } from "../state/uiStore";
+import SkillIcon from "./SkillIcon";
 import { sfx } from "../game/audio";
-
-const GLYPHS: Record<string, string> = {
-  slash: "/",
-  slam: "◎",
-  shield: "⬟",
-  bolt: "≋",
-  nova: "✸",
-  turret: "⌖",
-  arrow: "➤",
-  trap: "⬔",
-  burst: "✚",
-};
 
 function NodeCard({ node, rank, points, level }: { node: SkillNodeDef; rank: number; points: number; level: number }) {
   const { t } = useTranslation();
@@ -36,8 +25,8 @@ function NodeCard({ node, rank, points, level }: { node: SkillNodeDef; rank: num
       }}
       title={t(node.descKey)}
     >
-      <span className="text-xl font-black leading-none" style={{ color: locked ? "#475569" : node.color }}>
-        {GLYPHS[node.icon] ?? "?"}
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center">
+        <SkillIcon icon={node.icon} color={locked ? "#475569" : node.color} size={26} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[12px] font-semibold leading-tight text-slate-200">

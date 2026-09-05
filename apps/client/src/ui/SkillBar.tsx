@@ -3,18 +3,7 @@ import { SKILLS, type ClassId } from "@it-heroes/shared";
 import { useUi } from "../state/uiStore";
 import { useHud } from "../state/hudStore";
 import { world } from "../game/state/world";
-
-const GLYPHS: Record<string, string> = {
-  slash: "/",
-  slam: "◎",
-  shield: "⬟",
-  bolt: "≋",
-  nova: "✸",
-  turret: "⌖",
-  arrow: "➤",
-  trap: "⬔",
-  burst: "✚",
-};
+import SkillIcon from "./SkillIcon";
 
 function classSkills(classId: ClassId) {
   return SKILLS.filter((s) => s.classId === classId);
@@ -43,8 +32,8 @@ function Slot({
       }}
       title={`${t(skill.nameKey)} — ${t(skill.descKey)}`}
     >
-      <span className="text-2xl font-black leading-none" style={{ color: skill.color }}>
-        {GLYPHS[skill.icon] ?? "?"}
+      <span className="flex h-7 items-center justify-center" style={{ filter: `drop-shadow(0 0 5px ${skill.color}88)` }}>
+        <SkillIcon icon={skill.icon} color={noMana ? "#64748b" : skill.color} size={26} />
       </span>
       <span className="mt-1 max-w-full truncate px-1 text-[9px] leading-none tracking-wider text-slate-400">
         {t(skill.nameKey)}

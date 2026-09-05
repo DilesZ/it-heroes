@@ -90,8 +90,15 @@ export default function Player() {
 
     p.pos.addScaledVector(p.vel, dt);
     if (!insideWorld(p.pos.x, p.pos.z)) {
-      p.pos.addScaledVector(p.vel, -dt);
-      p.vel.multiplyScalar(0.2);
+      p.pos.x -= p.vel.x * dt;
+      if (!insideWorld(p.pos.x, p.pos.z)) {
+        p.pos.x += p.vel.x * dt;
+        p.pos.z -= p.vel.z * dt;
+        if (!insideWorld(p.pos.x, p.pos.z)) {
+          p.pos.z += p.vel.z * dt;
+          p.vel.multiplyScalar(0.2);
+        }
+      }
     }
 
     p.stamina = Math.min(PLAYER_BASE.maxStamina, p.stamina + PLAYER_BASE.staminaRegen * dt);

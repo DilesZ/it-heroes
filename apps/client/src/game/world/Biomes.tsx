@@ -166,6 +166,7 @@ function CloudField() {
 function Corridor({ z0, z1 }: { z0: number; z1: number }) {
   const len = Math.abs(z1 - z0);
   const zc = (z0 + z1) / 2;
+  const archColors = ["#a5e3f5", "#d3c6f7", "#a5e3b3", "#ffd9e8"];
   return (
     <group position={[0, 0, zc]}>
       <mesh position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -174,17 +175,22 @@ function Corridor({ z0, z1 }: { z0: number; z1: number }) {
       </mesh>
       {Array.from({ length: Math.floor(len / 7) }, (_, i) => {
         const z = -len / 2 + 3.5 + i * 7;
+        const accent = archColors[i % archColors.length];
         return (
           <group key={i} position={[0, 0, z]}>
-            <mesh position={[0, 3.4, 0]} rotation={[0, 0, 0]}>
-              <torusGeometry args={[5.4, 0.45, 10, 24, Math.PI]} />
-              <meshStandardMaterial color={BRIGHT.corridorWall} roughness={0.6} />
+            <mesh position={[0, 3.1, 0]}>
+              <torusGeometry args={[4.9, 0.32, 10, 24, Math.PI]} />
+              <meshStandardMaterial color={accent} roughness={0.55} />
             </mesh>
-            <mesh position={[0, 3.4, 0]}>
-              <torusGeometry args={[5.4, 0.16, 8, 24, Math.PI]} />
-              <meshStandardMaterial color="#ffffff" emissive={BRIGHT.corridorTrim} emissiveIntensity={1.2} />
+            <mesh position={[-4.9, 0.3, 0]}>
+              <sphereGeometry args={[0.5, 10, 8]} />
+              <meshStandardMaterial color="#eef3fd" roughness={0.5} />
             </mesh>
-            <pointLight color="#a5f3fc" intensity={8} distance={13} position={[0, 3, 0]} />
+            <mesh position={[4.9, 0.3, 0]}>
+              <sphereGeometry args={[0.5, 10, 8]} />
+              <meshStandardMaterial color="#eef3fd" roughness={0.5} />
+            </mesh>
+            <pointLight color="#ffffff" intensity={5} distance={13} position={[0, 3, 0]} />
           </group>
         );
       })}
