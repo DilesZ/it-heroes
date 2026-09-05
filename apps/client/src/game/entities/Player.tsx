@@ -5,6 +5,7 @@ import { PLAYER_BASE, CLASSES } from "@it-heroes/shared";
 import { world } from "../state/world";
 import { input } from "../input";
 import { useUi } from "../../state/uiStore";
+import { useInventory } from "../../state/inventoryStore";
 
 const UP = new THREE.Vector3(0, 1, 0);
 const camFwd = new THREE.Vector3();
@@ -40,6 +41,7 @@ export default function Player() {
   );
 
   useFrame((_, rawDt) => {
+    if (useInventory.getState().invOpen) return;
     const dt = Math.min(rawDt, 0.05) * world.timeScale;
     const p = world.player;
 

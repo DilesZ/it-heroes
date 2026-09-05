@@ -5,6 +5,9 @@ import { CLASSES, SKILLS, PLAYER_BASE, type SkillDef, type ClassId } from "@it-h
 import { world, resetWorld, type Combatant } from "../state/world";
 import { input } from "../input";
 import { useUi } from "../../state/uiStore";
+import { useInventory } from "../../state/inventoryStore";
+import { useHud } from "../../state/hudStore";
+import { initStarterKit } from "../loot";
 import {
   dealDamage,
   damagePlayer,
@@ -36,9 +39,12 @@ export default function CombatSystem() {
   useEffect(() => {
     resetWorld();
     ensureDummies();
+    useInventory.getState().reset();
+    initStarterKit();
   }, []);
 
   useFrame((_, raw) => {
+    if (useInventory.getState().invOpen) return;
     const rawDt = Math.min(raw, 0.05);
     world.hitstopT = Math.max(0, world.hitstopT - rawDt);
     world.timeScale = world.hitstopT > 0 ? 0.06 : 1;
@@ -65,9 +71,10 @@ export default function CombatSystem() {
     if (!p.alive) {
       p.deathT += dt;
       if (p.deathT > 2.5) {
+        const max = useHud.getState();
         p.alive = true;
-        p.health = PLAYER_BASE.maxHealth;
-        p.mana = PLAYER_BASE.maxMana;
+        p.health = max.maxHp;
+        p.mana = max.maxMana;
         p.stamina = PLAYER_BASE.maxStamina;
         p.pos.set(0, 0, 10);
         p.vel.set(0, 0, 0);

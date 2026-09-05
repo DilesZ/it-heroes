@@ -3,6 +3,7 @@ import { useUi } from "../state/uiStore";
 import { useHud } from "../state/hudStore";
 import SkillBar from "./SkillBar";
 import BossBar from "./BossBar";
+import { useInventory } from "../state/inventoryStore";
 import { CLASSES, GAME_NAME, VERSION, PLAYER_BASE } from "@it-heroes/shared";
 
 function Bar({
@@ -37,6 +38,9 @@ export default function Hud() {
   const classId = useUi((s) => s.classId);
   const setScreen = useUi((s) => s.setScreen);
   const { hp, maxHp, mana, maxMana, stamina, maxStamina, dead } = useHud();
+  const gold = useInventory((s) => s.gold);
+  const bagCount = useInventory((s) => s.items.length);
+  const setInvOpen = useInventory((s) => s.setInvOpen);
 
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -79,6 +83,13 @@ export default function Hud() {
         <span className="ml-3 text-xs text-slate-500">{t("biomes.hub")}</span>
       </div>
       <div className="absolute right-4 top-4 flex items-center gap-2">
+        <button
+          onClick={() => setInvOpen(true)}
+          className="pointer-events-auto btn-tech rounded px-3 py-1.5 text-xs font-bold tracking-widest text-amber-200"
+        >
+          [I] {t("hud.inventory")} ({bagCount})
+        </button>
+        <span className="rounded panel px-3 py-1.5 text-xs font-bold text-amber-300">{gold} G</span>
         <span className="rounded panel px-3 py-1.5 text-[10px] tracking-widest text-slate-500">
           {GAME_NAME} v{VERSION}
         </span>

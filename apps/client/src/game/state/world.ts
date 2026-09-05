@@ -50,6 +50,12 @@ export type Particle = {
   size: number;
   color: THREE.Color;
 };
+export type LootDrop = {
+  id: number;
+  item: import("@it-heroes/shared").ItemInstance;
+  pos: THREE.Vector3;
+  life: number;
+};
 export type FloatText = {
   alive: boolean;
   pos: THREE.Vector3;
@@ -95,6 +101,8 @@ export const world = {
     deathT: 0,
   },
   combatants: [] as Combatant[],
+  drops: [] as LootDrop[],
+  dropVersion: 0,
   turretVersion: 0,
   trapVersion: 0,
   dummyVersion: 0,
@@ -136,6 +144,8 @@ export const world = {
 
 export function resetWorld() {
   world.combatants.length = 0;
+  world.drops.length = 0;
+  world.dropVersion++;
   world.turrets.length = 0;
   world.traps.length = 0;
   for (const p of world.projectiles) p.alive = false;

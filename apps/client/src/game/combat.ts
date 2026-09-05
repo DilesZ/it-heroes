@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { world, type Combatant } from "./state/world";
+import { rollDrops } from "./loot";
 
 export function spawnParticles(
   pos: THREE.Vector3,
@@ -113,6 +114,7 @@ export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean
     spawnParticles(c.pos, c.emissive, 26, 9, 1.4);
     spawnFloat(c.pos, "K.I.A.", "#f43f5e", true);
     world.shake = Math.max(world.shake, 0.45);
+    if (c.kind === "enemy") rollDrops(c);
   }
 }
 

@@ -17,6 +17,7 @@ interface HudStore {
   bossFrac: number;
   bossNameKey: string;
   setVitals: (hp: number, mana: number, stamina: number) => void;
+  setMax: (maxHp: number, maxMana: number) => void;
   setCds: (basic: number, s1: number, s2: number, shield: boolean, haste: boolean) => void;
   setDead: (dead: boolean) => void;
   setBoss: (frac: number, nameKey: string) => void;
@@ -38,6 +39,7 @@ export const useHud = create<HudStore>((set) => ({
   bossFrac: -1,
   bossNameKey: "",
   setVitals: (hp, mana, stamina) => set({ hp, mana, stamina }),
+  setMax: (maxHp, maxMana) => set({ maxHp, maxMana }),
   setCds: (cdBasic, cdS1, cdS2, shield, haste) => set({ cdBasic, cdS1, cdS2, shield, haste }),
   setDead: (dead) => set({ dead }),
   setBoss: (bossFrac, bossNameKey) => set({ bossFrac, bossNameKey }),

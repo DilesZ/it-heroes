@@ -24,6 +24,7 @@ const GAME_KEYS = new Set([
   "Digit4",
   "Escape",
   "Tab",
+  "KeyI",
 ]);
 
 let cleanup: (() => void) | null = null;

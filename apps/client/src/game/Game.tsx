@@ -13,16 +13,21 @@ import { Slashes, Blasts } from "./entities/Fx";
 import { Turrets, Traps } from "./entities/Summons";
 import CombatSystem from "./systems/CombatSystem";
 import EnemySystem from "./systems/EnemySystem";
+import LootSystem from "./systems/LootSystem";
 import Enemies from "./entities/Enemies";
+import LootDrops from "./entities/LootDrops";
+import Inventory from "../ui/Inventory";
 import Hud from "../ui/Hud";
 import { initInput } from "./input";
 import { world } from "./state/world";
 import { useHud } from "../state/hudStore";
 import { useUi } from "../state/uiStore";
+import { useInventory } from "../state/inventoryStore";
 
 export default function Game() {
   const container = useRef<HTMLDivElement>(null);
   const setScreen = useUi((s) => s.setScreen);
+  const invOpen = useInventory((s) => s.invOpen);
 
   useEffect(() => {
     if (container.current) return initInput(container.current);
@@ -30,7 +35,14 @@ export default function Game() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code === "Escape") setScreen("menu");
+      if (e.code === "Escape") {
+        if (useInventory.getState().invOpen) useInventory.getState().setInvOpen(false);
+        else setScreen("menu");
+      }
+      if (e.code === "KeyI" || e.code === "Tab") {
+        const inv = useInventory.getState();
+        inv.setInvOpen(!inv.invOpen);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -51,10 +63,12 @@ export default function Game() {
           <CameraRig />
           <CombatSystem />
           <EnemySystem />
+          <LootSystem />
           <HubScene />
           <Player />
           <Dummies />
           <Enemies />
+          <LootDrops />
           <Projectiles />
           <Particles />
           <Slashes />
@@ -75,6 +89,7 @@ export default function Game() {
         </Suspense>
       </Canvas>
       <Hud />
+      {invOpen && <Inventory />}
     </div>
   );
 }
