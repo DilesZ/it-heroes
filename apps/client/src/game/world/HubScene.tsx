@@ -22,7 +22,7 @@ function Plaza() {
         x: Math.cos(a) * r,
         z: Math.sin(a) * r,
         r: 1.2 + rand() * 2.4,
-        c: rand() > 0.5 ? "#a9bcdfff" : "#9fb2d8ff",
+        c: rand() > 0.5 ? "#a9bcdf" : "#9fb2d8",
       });
     }
     return pts;
@@ -42,7 +42,7 @@ function Plaza() {
       {patches.map((pt, i) => (
         <mesh key={i} position={[pt.x, 0.004, pt.z]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[pt.r, 20]} />
-          <meshBasicMaterial color={pt.c} transparent opacity={0.5} />
+          <meshBasicMaterial color={pt.c} transparent opacity={0.28} />
         </mesh>
       ))}
       <mesh position={[0, 0.004, -48]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -118,8 +118,8 @@ function Monument() {
   return (
     <group position={[0, 0, -6]}>
       <Cyl p={[0, 0.35, 0]} rt={2.2} rb={2.6} h={0.7} color="#dfe8fa" />
-      <Cyl p={[0, 1.8, 0]} rt={0.8} rb={1.1} h={2.4} color="#f4f8ff" />
-      <Ball p={[0, 3.6, 0]} r={0.85} color="#bff3ff" emissive="#22d3ee" ei={1.6} detail={2} />
+      <Cyl p={[0, 1.8, 0]} rt={0.8} rb={1.1} h={2.4} color="#e6edfb" />
+      <Ball p={[0, 3.6, 0]} r={0.85} color="#9fdcf5" emissive="#22d3ee" ei={1.0} detail={2} />
       <mesh ref={ringA} position={[0, 3.6, 0]} rotation={[Math.PI / 2.3, 0, 0]}>
         <torusGeometry args={[1.6, 0.12, 10, 40]} />
         <meshStandardMaterial ref={matRef} color="#0e7490" emissive="#22d3ee" emissiveIntensity={1.8} roughness={0.3} />
@@ -128,7 +128,7 @@ function Monument() {
         <torusGeometry args={[2.1, 0.09, 10, 44]} />
         <meshStandardMaterial color="#6d28d9" emissive="#a78bfa" emissiveIntensity={1.6} roughness={0.3} />
       </mesh>
-      <pointLight position={[0, 4, 0]} intensity={26} color="#7dd3fc" distance={24} />
+      <pointLight position={[0, 4, 0]} intensity={14} color="#7dd3fc" distance={24} />
     </group>
   );
 }
@@ -160,7 +160,7 @@ function DataBalloons() {
     <group ref={groupRef}>
       {items.map((it, i) => (
         <Float key={i} speed={2.2} rotationIntensity={0.3} floatIntensity={0.8}>
-          <Ball p={[0, 0, 0]} r={0.32} color="#ffffff" emissive={it.color} ei={1.4} />
+          <Ball p={[0, 0, 0]} r={0.26} color="#e8f4ff" emissive={it.color} ei={0.8} outline={false} />
         </Float>
       ))}
     </group>
@@ -178,3 +178,4 @@ export default function HubScene() {
     </group>
   );
 }
+
