@@ -7,6 +7,7 @@ import { input } from "../input";
 import { useUi } from "../../state/uiStore";
 import { useInventory } from "../../state/inventoryStore";
 import { useHud } from "../../state/hudStore";
+import { computeMods, isPaused, useProgression } from "../../state/progressionStore";
 import { initStarterKit } from "../loot";
 import {
   dealDamage,
@@ -40,11 +41,13 @@ export default function CombatSystem() {
     resetWorld();
     ensureDummies();
     useInventory.getState().reset();
+    useProgression.getState().reset();
     initStarterKit();
+    computeMods();
   }, []);
 
   useFrame((_, raw) => {
-    if (useInventory.getState().invOpen) return;
+    if (isPaused()) return;
     const rawDt = Math.min(raw, 0.05);
     world.hitstopT = Math.max(0, world.hitstopT - rawDt);
     world.timeScale = world.hitstopT > 0 ? 0.06 : 1;
@@ -123,9 +126,9 @@ function tryMeleeAttack(basic: SkillDef, attack: number, cd: { basic: number }) 
   const p = world.player;
   if (p.mana < basic.manaCost) return;
   p.mana -= basic.manaCost;
-  cd.basic = basic.cooldown * (p.hasteT > 0 ? 0.55 : 1);
+  cd.basic = basic.cooldown * (p.hasteT > 0 ? 0.55 : 1) * p.cdMult;
   spawnSlash(p.pos, p.facing, basic.color, basic.range);
-  const dmg = basic.damage * attack;
+  const dmg = basic.damage * attack * p.slotDmg.basic;
   const arc = 2.1;
   for (const c of aliveCombatants()) {
     toTarget.copy(c.pos).sub(p.pos).setY(0);
@@ -155,7 +158,7 @@ function tryProjectileAttack(basic: SkillDef, classId: ClassId, cd: { basic: num
     return;
   }
   p.mana -= basic.manaCost;
-  cd[slot] = basic.cooldown * (p.hasteT > 0 ? 0.55 : 1);
+  cd[slot] = basic.cooldown * (p.hasteT > 0 ? 0.55 : 1) * p.cdMult;
   const stat = classId === "devops" ? CLASSES[classId].baseMagic + p.magicBonus : CLASSES[classId].baseAttack + p.attackBonus;
   spawnPos.copy(p.pos);
   spawnPos.y = 1.1;
@@ -163,7 +166,7 @@ function tryProjectileAttack(basic: SkillDef, classId: ClassId, cd: { basic: num
     pos: spawnPos,
     dir: new THREE.Vector3(Math.sin(p.facing), 0, Math.cos(p.facing)),
     speed: classId === "blueteam" ? 28 : 24,
-    damage: basic.damage * stat,
+    damage: basic.damage * stat * p.slotDmg.basic,
     color: basic.color,
   });
   spawnParticles(spawnPos, basic.color, 3, 2, 0.7);
@@ -176,17 +179,18 @@ function tryAoe(skill: SkillDef, classId: ClassId, cd: { basic: number; s1: numb
     return;
   }
   p.mana -= skill.manaCost;
-  cd[slot] = skill.cooldown;
+  cd[slot] = skill.cooldown * p.cdMult;
   const stat = classId === "devops" ? CLASSES[classId].baseMagic + p.magicBonus : CLASSES[classId].baseAttack + p.attackBonus;
   const radius = skill.radius ?? 3;
   spawnBlast(p.pos, skill.color, radius);
   spawnParticles(p.pos, skill.color, 30, 10, 1.3);
   world.shake = Math.max(world.shake, 0.5);
+  const mult = p.slotDmg[slot];
   for (const c of aliveCombatants()) {
     toTarget.copy(c.pos).sub(p.pos).setY(0);
     if (toTarget.length() > radius + 0.3 * c.scale) continue;
     const crit = rollCrit();
-    dealDamage(c, skill.damage * stat * (crit ? 2 : 1), {
+    dealDamage(c, skill.damage * stat * mult * (crit ? 2 : 1), {
       crit,
       color: skill.color,
       from: p.pos,
@@ -209,7 +213,7 @@ function tryTrap(s1: SkillDef, cd: { basic: number; s1: number; s2: number }, ai
   }
   if (world.traps.length >= 8) world.traps.shift();
   p.mana -= s1.manaCost;
-  cd.s1 = s1.cooldown;
+  cd.s1 = s1.cooldown * p.cdMult;
   world.traps.push({ id: world.nextId++, pos: aim.clone().setY(0), life: 20 });
   world.trapVersion++;
   spawnParticles(aim, s1.color, 8, 3, 0.8);
@@ -222,14 +226,14 @@ function tryBuff(skill: SkillDef, cd: { basic: number; s1: number; s2: number },
     return;
   }
   p.mana -= skill.manaCost;
-  cd[slot] = skill.cooldown;
+  cd[slot] = skill.cooldown * p.cdMult;
   if (skill.id === "sudo_shield") {
-    p.shield = 60;
+    p.shield = Math.round(60 * p.shieldMult);
     p.shieldT = 6;
     spawnBlast(p.pos, skill.color, 2);
     spawnFloat(p.pos, "sudo shield", skill.color);
   } else {
-    p.hasteT = 7;
+    p.hasteT = 7 + p.hasteBonus;
     spawnParticles(p.pos, skill.color, 18, 5, 1);
     spawnFloat(p.pos, "OVERCLOCK", skill.color);
   }
@@ -246,7 +250,7 @@ function trySummon(skill: SkillDef, cd: { basic: number; s1: number; s2: number 
     return;
   }
   p.mana -= skill.manaCost;
-  cd[slot] = skill.cooldown;
+  cd[slot] = skill.cooldown * p.cdMult;
   spawnPos.set(Math.sin(p.facing) * 1.6, 0, Math.cos(p.facing) * 1.6).add(p.pos);
   world.turrets.push({ id: world.nextId++, pos: spawnPos.clone(), life: 25, shotT: 0.4 });
   world.turretVersion++;
@@ -347,7 +351,7 @@ function updateTurrets(dt: number, magic: number) {
       pos: spawnPos,
       dir: toTarget,
       speed: 26,
-      damage: 0.6 * magic + 2,
+      damage: (0.6 * magic + 2) * world.player.slotDmg.s2,
       color: "#a78bfa",
       life: 1.2,
     });
@@ -380,7 +384,7 @@ function updateTraps(dt: number, magic: number) {
     for (const c of aliveCombatants()) {
       if (toTarget.copy(c.pos).sub(trap.pos).setY(0).length() > 3) continue;
       const crit = rollCrit();
-      dealDamage(c, 1.8 * (world.player.magicBonus + 7) * (crit ? 2 : 1), {
+      dealDamage(c, 1.8 * (world.player.magicBonus + 7) * world.player.slotDmg.s1 * (crit ? 2 : 1), {
         crit,
         color: "#10b981",
         from: trap.pos,

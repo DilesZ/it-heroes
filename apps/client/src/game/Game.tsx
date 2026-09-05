@@ -17,17 +17,20 @@ import LootSystem from "./systems/LootSystem";
 import Enemies from "./entities/Enemies";
 import LootDrops from "./entities/LootDrops";
 import Inventory from "../ui/Inventory";
+import SkillTree from "../ui/SkillTree";
 import Hud from "../ui/Hud";
 import { initInput } from "./input";
 import { world } from "./state/world";
 import { useHud } from "../state/hudStore";
 import { useUi } from "../state/uiStore";
 import { useInventory } from "../state/inventoryStore";
+import { useProgression } from "../state/progressionStore";
 
 export default function Game() {
   const container = useRef<HTMLDivElement>(null);
   const setScreen = useUi((s) => s.setScreen);
   const invOpen = useInventory((s) => s.invOpen);
+  const treeOpen = useProgression((s) => s.treeOpen);
 
   useEffect(() => {
     if (container.current) return initInput(container.current);
@@ -36,12 +39,18 @@ export default function Game() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === "Escape") {
-        if (useInventory.getState().invOpen) useInventory.getState().setInvOpen(false);
+        const prog = useProgression.getState();
+        if (prog.treeOpen) prog.setTreeOpen(false);
+        else if (useInventory.getState().invOpen) useInventory.getState().setInvOpen(false);
         else setScreen("menu");
       }
       if (e.code === "KeyI" || e.code === "Tab") {
         const inv = useInventory.getState();
         inv.setInvOpen(!inv.invOpen);
+      }
+      if (e.code === "KeyK") {
+        const prog = useProgression.getState();
+        prog.setTreeOpen(!prog.treeOpen);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -90,6 +99,7 @@ export default function Game() {
       </Canvas>
       <Hud />
       {invOpen && <Inventory />}
+      {treeOpen && <SkillTree />}
     </div>
   );
 }

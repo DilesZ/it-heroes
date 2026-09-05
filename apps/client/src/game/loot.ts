@@ -138,13 +138,13 @@ export function applyStats() {
     mp += stats.maxMana ?? 0;
   }
   const p = world.player;
-  p.attackBonus = atk;
-  p.magicBonus = mag;
-  p.defense = def;
-  p.speedBonus = 1 + spd / 100;
-  p.critBonus = crit / 100;
-  const maxHp = PLAYER_BASE.maxHealth + hp;
-  const maxMp = PLAYER_BASE.maxMana + mp;
+  p.attackBonus = atk + p.passive.attack;
+  p.magicBonus = mag + p.passive.magic;
+  p.defense = def + p.passive.defense;
+  p.speedBonus = 1 + (spd + p.passive.speed) / 100;
+  p.critBonus = (crit + p.passive.crit) / 100;
+  const maxHp = PLAYER_BASE.maxHealth + hp + p.passive.maxHealth;
+  const maxMp = PLAYER_BASE.maxMana + mp + p.passive.maxMana;
   useHud.getState().setMax(maxHp, maxMp);
   p.health = Math.min(p.health, maxHp);
   p.mana = Math.min(p.mana, maxMp);

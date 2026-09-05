@@ -1,6 +1,14 @@
 import * as THREE from "three";
+import { ENEMIES } from "@it-heroes/shared";
 import { world, type Combatant } from "./state/world";
 import { rollDrops } from "./loot";
+import { grantXp } from "../state/progressionStore";
+
+const XP_BY_DEF: Record<string, number> = Object.fromEntries(ENEMIES.map((d) => [d.id, d.xp]));
+
+export function enemyXp(defId: string): number {
+  return XP_BY_DEF[defId] ?? 10;
+}
 
 export function spawnParticles(
   pos: THREE.Vector3,
@@ -114,7 +122,11 @@ export function dealDamage(c: Combatant, amount: number, opts?: { crit?: boolean
     spawnParticles(c.pos, c.emissive, 26, 9, 1.4);
     spawnFloat(c.pos, "K.I.A.", "#f43f5e", true);
     world.shake = Math.max(world.shake, 0.45);
-    if (c.kind === "enemy") rollDrops(c);
+    if (c.kind === "enemy") {
+      rollDrops(c);
+      const def = c.defId ? enemyXp(c.defId) : 0;
+      grantXp(def);
+    }
   }
 }
 

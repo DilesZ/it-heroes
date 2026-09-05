@@ -2,7 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { ENEMIES, type EnemyDef } from "@it-heroes/shared";
 import { world, type Combatant } from "../state/world";
-import { useInventory } from "../../state/inventoryStore";
+import { isPaused } from "../../state/progressionStore";
 import {
   damagePlayer,
   spawnParticles,
@@ -69,7 +69,7 @@ export function spawnBoss() {
 
 export default function EnemySystem() {
   useFrame((_, raw) => {
-    if (useInventory.getState().invOpen) return;
+    if (isPaused()) return;
     const dt = Math.min(raw, 0.05) * world.timeScale;
     if (dt <= 0) return;
     elapsed += dt;

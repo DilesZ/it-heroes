@@ -1,3 +1,5 @@
+import type { StatKey } from "./items";
+
 export type ClassId = "helpdesk" | "devops" | "blueteam";
 
 export type SkillType = "melee" | "projectile" | "aoe" | "buff" | "summon";
@@ -52,6 +54,22 @@ export const CLASSES: Record<
 };
 
 export const CLASS_IDS: ClassId[] = ["helpdesk", "devops", "blueteam"];
+
+export type SkillNodeDef = {
+  id: string;
+  classId: ClassId;
+  nameKey: string;
+  descKey: string;
+  maxRank: number;
+  reqLevel: number;
+  target?: "basic" | "s1" | "s2";
+  dmgPerRank?: number;
+  stat?: StatKey;
+  statPerRank?: number;
+  special?: "shield" | "haste";
+  icon: string;
+  color: string;
+};
 
 export const SKILLS: SkillDef[] = [
   {
@@ -183,4 +201,34 @@ export const SKILLS: SkillDef[] = [
     icon: "burst",
     color: "#6ee7b7",
   },
+];
+
+export const SKILL_NODES: SkillNodeDef[] = [
+  { id: "hd_edge", classId: "helpdesk", nameKey: "nodes.hd_edge.name", descKey: "nodes.hd_edge.desc", maxRank: 3, reqLevel: 2, target: "basic", dmgPerRank: 0.15, icon: "slash", color: "#38bdf8" },
+  { id: "hd_reboot", classId: "helpdesk", nameKey: "nodes.hd_reboot.name", descKey: "nodes.hd_reboot.desc", maxRank: 3, reqLevel: 3, target: "s1", dmgPerRank: 0.2, icon: "slam", color: "#0ea5e9" },
+  { id: "hd_root", classId: "helpdesk", nameKey: "nodes.hd_root.name", descKey: "nodes.hd_root.desc", maxRank: 2, reqLevel: 4, target: "s2", special: "shield", icon: "shield", color: "#22d3ee" },
+  { id: "hd_muscle", classId: "helpdesk", nameKey: "nodes.hd_muscle.name", descKey: "nodes.hd_muscle.desc", maxRank: 3, reqLevel: 2, stat: "attack", statPerRank: 4, icon: "slash", color: "#f87171" },
+  { id: "hd_armor", classId: "helpdesk", nameKey: "nodes.hd_armor.name", descKey: "nodes.hd_armor.desc", maxRank: 3, reqLevel: 3, stat: "defense", statPerRank: 3, icon: "shield", color: "#94a3b8" },
+  { id: "hd_coffee", classId: "helpdesk", nameKey: "nodes.hd_coffee.name", descKey: "nodes.hd_coffee.desc", maxRank: 2, reqLevel: 4, stat: "speed", statPerRank: 4, icon: "burst", color: "#fbbf24" },
+  { id: "hd_luck", classId: "helpdesk", nameKey: "nodes.hd_luck.name", descKey: "nodes.hd_luck.desc", maxRank: 3, reqLevel: 5, stat: "crit", statPerRank: 2, icon: "nova", color: "#f472b6" },
+  { id: "hd_battery", classId: "helpdesk", nameKey: "nodes.hd_battery.name", descKey: "nodes.hd_battery.desc", maxRank: 3, reqLevel: 2, stat: "maxHealth", statPerRank: 15, icon: "slam", color: "#4ade80" },
+  { id: "hd_cable", classId: "helpdesk", nameKey: "nodes.hd_cable.name", descKey: "nodes.hd_cable.desc", maxRank: 2, reqLevel: 6, stat: "maxMana", statPerRank: 12, icon: "bolt", color: "#60a5fa" },
+  { id: "do_jumbo", classId: "devops", nameKey: "nodes.do_jumbo.name", descKey: "nodes.do_jumbo.desc", maxRank: 3, reqLevel: 2, target: "basic", dmgPerRank: 0.15, icon: "bolt", color: "#a78bfa" },
+  { id: "do_obf", classId: "devops", nameKey: "nodes.do_obf.name", descKey: "nodes.do_obf.desc", maxRank: 3, reqLevel: 3, target: "s1", dmgPerRank: 0.2, icon: "nova", color: "#c084fc" },
+  { id: "do_k8s", classId: "devops", nameKey: "nodes.do_k8s.name", descKey: "nodes.do_k8s.desc", maxRank: 3, reqLevel: 4, target: "s2", dmgPerRank: 0.2, icon: "turret", color: "#8b5cf6" },
+  { id: "do_oc", classId: "devops", nameKey: "nodes.do_oc.name", descKey: "nodes.do_oc.desc", maxRank: 3, reqLevel: 2, stat: "magic", statPerRank: 4, icon: "bolt", color: "#f472b6" },
+  { id: "do_ssd", classId: "devops", nameKey: "nodes.do_ssd.name", descKey: "nodes.do_ssd.desc", maxRank: 2, reqLevel: 3, stat: "speed", statPerRank: 4, icon: "burst", color: "#fbbf24" },
+  { id: "do_fw", classId: "devops", nameKey: "nodes.do_fw.name", descKey: "nodes.do_fw.desc", maxRank: 3, reqLevel: 4, stat: "defense", statPerRank: 3, icon: "shield", color: "#94a3b8" },
+  { id: "do_crit", classId: "devops", nameKey: "nodes.do_crit.name", descKey: "nodes.do_crit.desc", maxRank: 3, reqLevel: 5, stat: "crit", statPerRank: 2, icon: "nova", color: "#fb7185" },
+  { id: "do_ram", classId: "devops", nameKey: "nodes.do_ram.name", descKey: "nodes.do_ram.desc", maxRank: 3, reqLevel: 2, stat: "maxMana", statPerRank: 10, icon: "slam", color: "#60a5fa" },
+  { id: "do_ci", classId: "devops", nameKey: "nodes.do_ci.name", descKey: "nodes.do_ci.desc", maxRank: 2, reqLevel: 6, stat: "maxHealth", statPerRank: 12, icon: "trap", color: "#4ade80" },
+  { id: "bt_fiber", classId: "blueteam", nameKey: "nodes.bt_fiber.name", descKey: "nodes.bt_fiber.desc", maxRank: 3, reqLevel: 2, target: "basic", dmgPerRank: 0.15, icon: "arrow", color: "#34d399" },
+  { id: "bt_honey", classId: "blueteam", nameKey: "nodes.bt_honey.name", descKey: "nodes.bt_honey.desc", maxRank: 3, reqLevel: 3, target: "s1", dmgPerRank: 0.2, icon: "trap", color: "#10b981" },
+  { id: "bt_patch", classId: "blueteam", nameKey: "nodes.bt_patch.name", descKey: "nodes.bt_patch.desc", maxRank: 2, reqLevel: 4, target: "s2", special: "haste", icon: "burst", color: "#6ee7b7" },
+  { id: "bt_aim", classId: "blueteam", nameKey: "nodes.bt_aim.name", descKey: "nodes.bt_aim.desc", maxRank: 3, reqLevel: 2, stat: "attack", statPerRank: 4, icon: "arrow", color: "#f87171" },
+  { id: "bt_agil", classId: "blueteam", nameKey: "nodes.bt_agil.name", descKey: "nodes.bt_agil.desc", maxRank: 3, reqLevel: 3, stat: "speed", statPerRank: 4, icon: "burst", color: "#fbbf24" },
+  { id: "bt_vest", classId: "blueteam", nameKey: "nodes.bt_vest.name", descKey: "nodes.bt_vest.desc", maxRank: 3, reqLevel: 4, stat: "defense", statPerRank: 3, icon: "shield", color: "#94a3b8" },
+  { id: "bt_hawk", classId: "blueteam", nameKey: "nodes.bt_hawk.name", descKey: "nodes.bt_hawk.desc", maxRank: 3, reqLevel: 5, stat: "crit", statPerRank: 2, icon: "nova", color: "#f472b6" },
+  { id: "bt_batt", classId: "blueteam", nameKey: "nodes.bt_batt.name", descKey: "nodes.bt_batt.desc", maxRank: 3, reqLevel: 2, stat: "maxHealth", statPerRank: 15, icon: "slam", color: "#4ade80" },
+  { id: "bt_auto", classId: "blueteam", nameKey: "nodes.bt_auto.name", descKey: "nodes.bt_auto.desc", maxRank: 2, reqLevel: 6, stat: "maxMana", statPerRank: 12, icon: "bolt", color: "#60a5fa" },
 ];

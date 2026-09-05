@@ -99,6 +99,11 @@ export const world = {
     cd: { basic: 0, s1: 0, s2: 0 },
     alive: true,
     deathT: 0,
+    slotDmg: { basic: 1, s1: 1, s2: 1 },
+    cdMult: 1,
+    shieldMult: 1,
+    hasteBonus: 0,
+    passive: { attack: 0, magic: 0, defense: 0, speed: 0, crit: 0, maxHealth: 0, maxMana: 0 },
   },
   combatants: [] as Combatant[],
   drops: [] as LootDrop[],
@@ -165,6 +170,11 @@ export function resetWorld() {
   pl.hasteT = 0;
   pl.alive = true;
   pl.deathT = 0;
+  pl.slotDmg = { basic: 1, s1: 1, s2: 1 };
+  pl.cdMult = 1;
+  pl.shieldMult = 1;
+  pl.hasteBonus = 0;
+  pl.passive = { attack: 0, magic: 0, defense: 0, speed: 0, crit: 0, maxHealth: 0, maxMana: 0 };
   pl.cd.basic = 0;
   pl.cd.s1 = 0;
   pl.cd.s2 = 0;

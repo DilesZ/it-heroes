@@ -2,13 +2,13 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { world } from "../state/world";
 import { collectDrop } from "../loot";
-import { useInventory } from "../../state/inventoryStore";
+import { isPaused } from "../../state/progressionStore";
 
 const toPlayer = new THREE.Vector3();
 
 export default function LootSystem() {
   useFrame((_, raw) => {
-    if (useInventory.getState().invOpen) return;
+    if (isPaused()) return;
     const dt = Math.min(raw, 0.05) * world.timeScale;
     if (dt <= 0 || world.drops.length === 0) return;
     const p = world.player.pos;
